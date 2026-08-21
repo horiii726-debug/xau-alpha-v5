@@ -30,18 +30,31 @@ CANDLE_DTYPE = np.dtype(
     [("ts_s", ">i4"), ("open", ">i4"), ("close", ">i4"), ("low", ">i4"), ("high", ">i4"), ("vol", ">f4")]
 )
 
-REQUEST_DELAY = 0.42
+REQUEST_DELAY = 1.0  # lowered from 0.42s after repeated 503s -- ~1 req/s
 BACKOFF_ON_429 = 45.0
+BACKOFF_STEPS = [5, 10, 20, 40, 80, 120]  # escalating backoff for 503/network errors
+LONG_COOLDOWN_AFTER_CONSECUTIVE_FAILS = 20  # circuit breaker: after this many in a row, sleep 30min and retry
+LONG_COOLDOWN_SECONDS = 1800
 
 
 def fetch_side(session: requests.Session, symbol: str, day: date, side: str, log) -> bytes:
     url = f"{BASE_URL}/{symbol}/{day.year}/{day.month - 1:02d}/{day.day:02d}/{side}_candles_min_1.bi5"
+    consecutive_fails = 0
+    backoff_idx = 0
     while True:
         try:
             r = session.get(url, timeout=20)
         except requests.RequestException as e:
-            log.warning(f"network error {url}: {e}, retry in 5s")
-            time.sleep(5)
+            consecutive_fails += 1
+            delay = BACKOFF_STEPS[min(backoff_idx, len(BACKOFF_STEPS) - 1)]
+            log.warning(f"network error {url}: {e} (fail #{consecutive_fails}), retry in {delay}s")
+            time.sleep(delay)
+            backoff_idx += 1
+            if consecutive_fails >= LONG_COOLDOWN_AFTER_CONSECUTIVE_FAILS:
+                log.warning(f"{consecutive_fails} consecutive fails -- long cooldown {LONG_COOLDOWN_SECONDS}s, then resetting backoff")
+                time.sleep(LONG_COOLDOWN_SECONDS)
+                consecutive_fails = 0
+                backoff_idx = 0
             continue
         if r.status_code == 200:
             return r.content
@@ -52,7 +65,16 @@ def fetch_side(session: requests.Session, symbol: str, day: date, side: str, log
             time.sleep(BACKOFF_ON_429)
             continue
         elif r.status_code == 503:
-            time.sleep(5)
+            consecutive_fails += 1
+            delay = BACKOFF_STEPS[min(backoff_idx, len(BACKOFF_STEPS) - 1)]
+            log.warning(f"503 at {symbol} {day} {side} (fail #{consecutive_fails}), retry in {delay}s")
+            time.sleep(delay)
+            backoff_idx += 1
+            if consecutive_fails >= LONG_COOLDOWN_AFTER_CONSECUTIVE_FAILS:
+                log.warning(f"{consecutive_fails} consecutive fails -- long cooldown {LONG_COOLDOWN_SECONDS}s, then resetting backoff")
+                time.sleep(LONG_COOLDOWN_SECONDS)
+                consecutive_fails = 0
+                backoff_idx = 0
             continue
         else:
             time.sleep(3)
