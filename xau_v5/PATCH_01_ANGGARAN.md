@@ -10,21 +10,24 @@
 > bawah murni pre-registration, konsisten dengan §O1.
 >
 > **F0 belum dimulai.** Patch ini adalah syarat sebelum F0, bukan bagian dari F0.
+>
+> **Revisi ronde 2 (2026-08-21):** tiga hal yang dilaporkan di §6 versi
+> pertama sudah diputuskan user. Lihat §6 untuk resolusinya. `patch_sha256`
+> di §7 dihitung ulang dari versi final ini.
 
 ---
 
-## Ringkasan lima keputusan
+## Ringkasan keputusan (setelah ronde 2)
 
 | # | Temuan / Adendum | Keputusan user |
 |---|---|---|
 | 1 | Tangga pemangkasan tidak capai anggarannya sendiri | Opsi (a)+(b): tambah langkah 7 + ubah rumus `screen_max` |
-| 2 | K_eff=3 → nol slot untuk E dan M | Tulis aturan eksplisit — dicatat sebagai hasil sah |
+| 2 | K_eff=3 → nol slot untuk E dan M | **DICABUT ronde 2** — gugur setelah langkah 7 diterapkan, lihat §6.1 |
 | 3 | 4 angka potongan salah hitung | Koreksi L1, L2, L3, L5 + angka sisa M |
+| 3b | M12/M13 (7 varian) tidak tercakup langkah 3 | **BARU ronde 2** — ditambahkan ke daftar buang langkah 3, lihat §6.2 |
+| 3c | L2 (-26): E97 sudah nol, tidak bisa "dikecilkan" | **BARU ronde 2** — daftar formula L2 dikoreksi (E24 menggantikan E97), lihat §6.3 |
 | 4 | `pilot_set` F2b memuat E72 (bukan tier-1) | Ganti E72 → `E70_MANN_KENDALL` |
 | Z | 17 varian Adendum Z (Z01–Z03) | Opsi A — dibayar dari anggaran divisi E lewat langkah 2 |
-
-⚠️ **Baca §6 sebelum memakai angka di §2** — ada satu tegangan antara keputusan
-Temuan 1 dan Temuan 2 yang baru ketemu saat menyusun patch ini.
 
 ---
 
@@ -40,15 +43,15 @@ tangga_pemangkasan_v2:  # menggantikan trial_budget.tangga_pemangkasan di 06_GER
       potong: -32          # KOREKSI dari klaim asli -37 (Temuan 3)
       E_setelah: 177        # 209-32, dari 56 formula jadi 47 formula
     2:
-      aksi: "E tier-2 grid besar dikecilkan ke maks 3 varian (E33, E35, E80, E97, E02, E03, E22)"
-      potong: -26           # KOREKSI dari klaim asli -29 (Temuan 3)
-      catatan: "E97 sudah nol dari langkah 1 — lihat §6.1 untuk detail rekonsiliasi"
+      aksi: "E tier-2 grid besar dikecilkan ke maks 3 varian (E33, E35, E80, E02, E03, E22, E24)"
+      potong: -26           # KOREKSI dari klaim asli -29 (Temuan 3), formula list dikoreksi ronde 2 — lihat §6.3
+      catatan: "E97 DIKELUARKAN dari daftar (sudah nol dari langkah 1), digantikan E24 (6 varian, belum tersentuh langkah manapun) — lihat §6.3"
       E_setelah: 151         # 177-26
     3:
-      aksi: "M dipangkas ke baseline + meta-labeling saja: buang M01-M05, M09, M10, M14, M15"
-      potong: -52           # KOREKSI dari klaim asli -53 (Temuan 3)
-      sisakan_eksplisit: "M06 (4) + M07 (4) + M08 (6) + M11 (8) = 22"   # KOREKSI dari klaim asli "10"
-      catatan: "M12/M13 tidak disebut langkah ini — lihat §6.2"
+      aksi: "M dipangkas ke baseline + meta-labeling saja: buang M01-M05, M09, M10, M14, M15, M12, M13"
+      potong: -59           # KOREKSI ronde 1: -53->-52 (Temuan 3). KOREKSI ronde 2: -52->-59 (M12+M13 ditambahkan, §6.2)
+      sisa_M_total: "M06 (4) + M07 (4) + M08 (6) + M11 (8) = 22 — ini SEKARANG total sisa M yang sebenarnya, bukan cuma subset eksplisit"
+      catatan: "M12 (3) dan M13 (4) ditambahkan ke daftar buang di ronde 2 — lihat §6.2. Prinsip langkah 3 adalah 'sisakan baseline wajib (M6) + meta-labeling saja' — M12/M13 bukan keduanya."
     4:
       aksi: "E tier-1 dengan grid besar dikecilkan ke 2 varian per formula"
       potong: adaptif        # tidak diubah — potong secukupnya untuk capai target, dihitung di F0
@@ -76,7 +79,7 @@ trial_budget_v2:
   screen_max_lama: "min(500, floor(50 * K_eff_terukur))"           # DIGANTIKAN
   screen_max_baru: "max(219, min(500, floor(50 * K_eff_terukur)))" # BERLAKU MULAI PATCH INI
   lantai_keras: 219
-  lantai_keras_komposisi: "X 114 (tidak boleh dipangkas) + V/Q/T 36 (langkah 5) + M 22 (langkah 3, lihat §6.2) + E 47 (langkah 1+7) = 219"
+  lantai_keras_komposisi: "X 114 (tidak boleh dipangkas) + V/Q/T 36 (langkah 5) + M 22 (langkah 3, M12/M13 ikut dipangkas — §6.2) + E 47 (langkah 1+7) = 219"
   breakeven_K_eff: 4.38   # 219/50 — di atas titik ini, formula lama dan baru identik
 ```
 
@@ -100,30 +103,34 @@ formula saja.
 
 ---
 
-## 2. Aturan eksplisit K_eff 3–4 (Temuan 2)
+## 2. Temuan 2 — DICABUT (ronde 2)
 
-Teks yang Anda minta, ditulis verbatim sebagai tambahan ke `tangga_pemangkasan`:
+> **Temuan 2 gugur setelah Temuan 1 diterapkan — lantai 219 sudah menyediakan
+> slot untuk E dan M.**
 
-> **K_eff antara 3 dan 4: hanya divisi X + baseline estimasi yang dijalankan.
-> Divisi E dan M ditunda sampai panel diperluas. Ini hasil yang sah, bukan
-> kegagalan.**
-
-⚠️ **Lihat §6.3 — teks ini kemungkinan sudah tidak menggambarkan keadaan
-sebenarnya setelah langkah 7 (§1) diterapkan.** Saya tulis verbatim sesuai
-instruksi, tapi mohon dikonfirmasi ulang sebelum dipakai sebagai aturan
-operasional F0.
+Teks aturan eksplisit yang sebelumnya ditulis di sini ("K_eff antara 3 dan 4:
+hanya divisi X + baseline estimasi yang dijalankan, divisi E dan M ditunda")
+**dihapus**. Alasan lengkap di §6.1. Ringkas: setelah langkah 7 (§1) berlaku,
+`screen_max` di K_eff=3 adalah 219 (bukan 150), dan komposisi lantai 219 itu
+sendiri sudah memuat E=47 dan M=22 — bukan nol. Premis Temuan 2 tidak berlaku
+lagi begitu Temuan 1 diterapkan.
 
 ---
 
 ## 3. Koreksi angka (Temuan 3) — ringkasan
 
-| Langkah | Klaim asli | Angka terkoreksi (dipakai mulai patch ini) |
-|---|---:|---:|
-| L1 (E tier-3 dibuang) | -37 | **-32** |
-| L2 (E tier-2 grid ke maks 3) | -29 | **-26** |
-| L3 (M dipangkas ke baseline+meta) | -53 | **-52** |
-| L3 — sisa M (eksplisit) | 10 | **22** |
-| L5 (V/Q/T ke 1 varian/formula) | -60 | **-67** |
+| Langkah | Klaim asli | Ronde 1 | Ronde 2 (final) |
+|---|---:|---:|---:|
+| L1 (E tier-3 dibuang) | -37 | -32 | **-32** (tidak berubah) |
+| L2 (E tier-2 grid ke maks 3) | -29 | -26 | **-26** (angka sama, daftar formula dikoreksi — §6.3) |
+| L3 (M dipangkas ke baseline+meta) | -53 | -52 | **-59** (M12/M13 ditambahkan — §6.2) |
+| L3 — sisa M | 10 | 22 (eksplisit, ada gap 7 tersembunyi) | **22** (total sebenarnya, gap tertutup) |
+| L5 (V/Q/T ke 1 varian/formula) | -60 | -67 | **-67** (tidak berubah) |
+
+Total setelah L1+L2+L3+L5 (sebelum L7): 507-32-26-59-67 = **323**.
+Setelah L7 (E ke 1 varian/formula, -104 dari E): 323-104 = **219**. Cocok
+dengan lantai keras §1.1, dan sekarang tidak ada lagi angka yang tidak
+tereskonsiliasi (bandingkan dengan versi ronde 1 yang masih punya gap 7 di M).
 
 ---
 
@@ -165,67 +172,60 @@ apa adanya, bukan dipaksa pas ke 507.
 
 ---
 
-## 6. Temuan tambahan — ditemukan saat menyusun patch ini, DILAPORKAN bukan DIPUTUSKAN
+## 6. Resolusi ronde 2 — tiga temuan tambahan, semuanya sudah diputuskan user
 
-Tiga hal di bawah muncul saat saya mencoba merekonsiliasi angka §1–§5
-sampai ke level formula individual. Saya **tidak** menyelesaikannya sepihak —
-saya pakai angka yang Anda tentukan di semua tempat, tapi mencatat gap-nya di
-sini sesuai §stop_conditions.6 ("masalah yang tidak diatur file ini →
-berhenti, tanya user").
+Tiga hal di bawah muncul saat menyusun versi pertama patch ini (merekonsiliasi
+angka §1–§5 sampai level formula individual). Dilaporkan tanpa diputuskan
+sepihak di ronde 1; user memutuskan ketiganya di ronde 2. Dicatat di sini
+untuk jejak audit.
 
-### 6.1 — L2 (-26): rekonsiliasi formula-per-formula tidak bulat
-
-L2 menyebut 7 formula (E33, E35, E80, **E97**, E02, E03, E22), tapi E97 sudah
-nol varian sejak langkah 1 — tidak ada yang bisa "dikecilkan 6→3" pada formula
-yang sudah tidak ada. Kalau E97 dikeluarkan sepenuhnya dari perhitungan, potongan
-ketat dari 6 formula yang tersisa (E33, E35, E80, E02, E03, E22) adalah **-23**,
-bukan -26. Angka -26 yang Anda pakai cocok secara aritmetika kalau E97 tetap
-dihitung sebagai bagian dari jumlah (6+5+3+3+3+3+3=26), tapi itu menghitung
-sesuatu yang sudah tidak ada. Saya memakai **-26** (angka Anda) di seluruh
-patch ini, tapi selisih 3 varian ini belum sepenuhnya jelas asalnya dan perlu
-dicek ulang saat kode L2 ditulis di F0.
-
-### 6.2 — M12/M13 (7 varian) tidak disebut di langkah manapun
-
-`M12_KALMAN_LATENT_DRIFT` (3 varian) dan `M13_KALMAN_LATENT_VOL` (4 varian) —
-total 7 varian — tidak muncul di langkah 3 (atau langkah manapun) di
-`tangga_pemangkasan`, baik versi asli maupun versi terkoreksi. Kalau langkah 3
-dijalankan persis seperti tertulis (buang M01-M05, M09, M10, M14, M15; sisakan
-M06, M07, M08, M11), M12/M13 otomatis **tetap ada** — sisa M sungguhan jadi
-22+7=**29**, bukan 22.
-
-Tapi lantai keras 219 (§1.1) yang sudah Anda kunci HANYA konsisten kalau M=22
-di titik lantai (114+36+22+47=219; kalau M=29, lantai jadi 226, bukan 219).
-Artinya supaya 219 benar, M12/M13 harus ikut tidak dijalankan di titik lantai —
-tapi tidak ada langkah eksplisit yang memerintahkan itu. Saya pakai 219 dan
-M=22 sesuai keputusan Anda, tapi status M12/M13 di titik lantai **belum
-diatur**. Rekomendasi: tambahkan catatan eksplisit di langkah 3 bahwa M12/M13
-ikut dipangkas di titik lantai, atau putuskan mereka tetap hidup dan terima
-lantai jadi 226.
-
-### 6.3 — Tegangan antara Temuan 1 (langkah 7) dan Temuan 2 (aturan K_eff 3-4)
-
-Ini yang paling penting untuk dibaca ulang.
+### 6.1 — Tegangan Temuan 1 vs Temuan 2 → **Temuan 2 dicabut**
 
 Sebelum langkah 7 ditambahkan, K_eff=3 menghasilkan `screen_max`=150, dan
-komposisi minimum X+V/Q/T saja sudah 114+36=150 — **habis**, nol sisa untuk E
-dan M. Itu premis Temuan 2.
+komposisi minimum X+V/Q/T saja sudah 114+36=150 — habis, nol sisa untuk E dan
+M. Itu premis Temuan 2. Setelah langkah 7 diterapkan, `screen_max` di K_eff=3
+menjadi 219, dan lantai 219 itu sendiri sudah memuat E=47 dan M=22.
 
-**Setelah langkah 7 diterapkan** (§1), `screen_max` pada K_eff=3 menjadi **219**
-(lantai mengikat), dan komposisi lantai 219 itu SENDIRI sudah menyediakan
-**E=47** dan **M=22** — bukan nol. Dengan kata lain: perbaikan Temuan 1 sudah
-secara struktural menyelesaikan masalah Temuan 2. Pada K_eff manapun ≥3, divisi
-E dan M **selalu** dapat alokasi minimum (47 dan 22), tidak pernah nol lagi.
+**Keputusan user:** Temuan 2 dicabut. "Temuan 1 menang." Teks aturan
+eksplisit K_eff 3-4 dihapus dari §2, digantikan catatan pencabutan.
 
-Teks Temuan 2 yang Anda minta ("hanya X + baseline estimasi, E dan M ditunda")
-sudah saya tulis verbatim di §2 karena itu instruksi eksplisit Anda, tapi
-secara matematis **premisnya tidak lagi berlaku** setelah §1 diterapkan. Kalau
-kedua keputusan ini dipakai bersamaan tanpa diperjelas, akan ada kontradiksi
-langsung: §1 bilang E dan M dapat 47+22 slot di K_eff=3, §2 bilang E dan M
-ditunda sepenuhnya di rentang K_eff yang sama.
+### 6.2 — M12/M13 (7 varian) tidak disebut di langkah manapun → **ditambahkan ke langkah 3**
 
-**Perlu diputuskan:** hapus teks §2 (karena sudah tidak relevan setelah §1),
-atau simpan §2 untuk kasus lain yang belum saya pahami maksudnya?
+`M12_KALMAN_LATENT_DRIFT` (3) dan `M13_KALMAN_LATENT_VOL` (4) tidak muncul di
+daftar buang ataupun daftar sisa langkah 3 manapun. Kalau langkah 3 dijalankan
+persis seperti tertulis, M12/M13 otomatis tetap ada — sisa M sungguhan jadi
+22+7=29, bukan 22 — dan lantai keras jadi 226, bukan 219.
+
+**Keputusan user:** M12 dan M13 memang seharusnya ikut dipangkas — prinsip
+langkah 3 adalah "sisakan baseline wajib (M06/M07/M08) + meta-labeling
+(M11) saja," dan M12/M13 bukan keduanya; daftarnya yang lupa mencantumkan.
+Ditambahkan ke daftar buang langkah 3 (§1). Potong langkah 3 naik dari -52
+jadi **-59**. Lantai tetap **219**.
+
+### 6.3 — L2 (-26): E97 sudah nol, tidak bisa "dikecilkan" → **daftar formula dikoreksi**
+
+L2 asli menyebut 7 formula (E33, E35, E80, **E97**, E02, E03, E22), tapi E97
+sudah nol varian sejak langkah 1 — tidak ada yang bisa "dikecilkan 6→3" pada
+formula yang sudah tidak ada. Rekonsiliasi ronde 1 saya (hanya 6 formula hidup,
+E33+E35+E80+E02+E03+E22) memberi -23, bukan -26 — jadi saya tandai sebagai gap
+yang belum jelas asalnya.
+
+**Keputusan user:** angka **-26** yang benar, bukan revisi saya (-23). Formula
+yang hidup di langkah 2 bukan 6 tapi 7: E33, E35, E80, E02, E03, E22, **E24**
+(E24_HIGUCHI_FD, 6 varian, tier-2, belum tersentuh langkah manapun —
+menggantikan posisi E97 yang sudah nol). Potongan: 9→3(-6) + 8→3(-5) +
+6→3×5(-15) = **-26**. Verifikasi saya: variant count E24 dari
+`DIVISI_E_ENTRY_ARAH.md` = 6 (window×k_max = 3×2), cocok dengan perhitungan
+di atas.
+
+⚠️ **Catatan untuk jejak audit, bukan bantahan:** teks langkah 2 verbatim di
+`06_GERBANG_DAN_ANGGARAN.md` secara eksplisit menulis "E97" dalam daftarnya,
+bukan "E24" — jadi ini bukan salah baca saya atas sumber, tapi substitusi
+formula yang disengaja (E97→E24) supaya -26 bisa direalisasikan pada formula
+yang benar-benar masih hidup. Diperlakukan setara dengan substitusi Temuan 4
+(E72→E70): keduanya OVERRIDE V5 eksplisit atas daftar formula tertentu, bukan
+perubahan ambang atau rumus. Dicatat di §1 langkah 2 dan di sini agar siapapun
+yang menulis kode L2 di F0 tahu alasannya.
 
 ---
 
@@ -234,9 +234,10 @@ atau simpan §2 untuk kasus lain yang belum saya pahami maksudnya?
 ```yaml
 meta_override:
   locked_on: "2026-08-21"
+  revisi: "ronde 2 — lihat §6 untuk resolusi 3 temuan tambahan dari ronde 1"
   base_source_sha256: "264fe974c1c1fa70b155b8a4f6b2c865860ef948194c3041d2df648b0a9d0b30"
   scope: "Hanya keputusan anggaran/tangga pemangkasan/Adendum Z di file ini (PATCH_01_ANGGARAN.md). BUKAN pengunci config/v5.yaml F0 — file itu belum dibuat."
-  patch_sha256: "lihat PATCH_01_ANGGARAN.md.sha256 (sidecar, dihitung setelah file ini final)"
+  patch_sha256: "lihat PATCH_01_ANGGARAN.md.sha256 (sidecar, dihitung ulang dari versi final ronde 2)"
   catatan: >
     XAU_ALPHA_V5.yaml (sumber asli, 3352 baris) tidak ditemukan di filesystem
     ini — hanya 19 file split markdown di xau_v5/. Hash sumber di atas
