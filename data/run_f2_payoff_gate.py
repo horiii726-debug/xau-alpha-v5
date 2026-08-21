@@ -60,6 +60,7 @@ def demean_series(mid: np.ndarray, window_days: int, bars_per_day: int) -> np.nd
 
 def sign_flipped_series(mid: np.ndarray) -> np.ndarray:
     r = np.diff(np.log(mid))
+    r = np.concatenate([[0], r])  # preserve length -- np.diff drops the first element
     return mid[0] * np.exp(np.cumsum(-r))
 
 
