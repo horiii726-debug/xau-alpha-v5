@@ -15,6 +15,21 @@ def test_qlike_positive_for_imperfect_forecast():
     assert np.all(loss > 0)
 
 
+def test_qlike_degenerate_near_zero_forecast_excluded_not_exploded():
+    """Regression test for the F4 bug: a forecast_var effectively zero
+    relative to the estimator's typical scale (e.g. a quiet M1 bar with
+    literally no price movement in the trailing window) must be treated
+    as undefined (NaN), not scored via an exploding RV/F ratio. First
+    version floored at a fixed 1e-300, which let real F4 output reach
+    QLIKE ~1e80 for V05/V12, silently dominating the reported mean loss."""
+    rv = np.array([1e-8, 1e-8, 1e-8, 1e-8])
+    forecast = np.array([1e-8, 1e-8, 1e-8, 1e-20])  # last one effectively zero vs the others
+    loss = qlike_loss(rv, forecast)
+    assert np.isnan(loss[-1])
+    assert np.all(np.isfinite(loss[:-1]))
+    assert np.all(loss[:-1] < 1.0)  # near-perfect forecasts for the first three
+
+
 def test_mcs_eliminates_clearly_worse_model():
     rng = np.random.default_rng(0)
     n = 2000

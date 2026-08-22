@@ -8,10 +8,29 @@ Tie-break: among statistically-equivalent finalists, keep the simplest
 import numpy as np
 
 
-def qlike_loss(realized_var: np.ndarray, forecast_var: np.ndarray) -> np.ndarray:
-    """QLIKE(t) = RV/F - ln(RV/F) - 1, lower is better. Guards against
-    non-positive forecasts (undefined loss) by returning NaN there."""
-    ratio = np.where(forecast_var > 0, realized_var / np.maximum(forecast_var, 1e-300), np.nan)
+def qlike_loss(realized_var: np.ndarray, forecast_var: np.ndarray, min_forecast_var: float = None) -> np.ndarray:
+    """QLIKE(t) = RV/F - ln(RV/F) - 1, lower is better.
+
+    QLIKE is well known to be extremely sensitive to near-zero forecasts
+    (the ratio RV/F explodes as F->0). A forecast_var of literally 0 (or
+    numerically indistinguishable from 0) happens for real on quiet M1
+    bars with no price movement in the trailing window -- that's a
+    degenerate, UNDEFINED evaluation point, not a "very bad forecast".
+    First version floored forecast_var at 1e-300 to avoid a hard
+    division error, which let the ratio blow up to 10^80+ and silently
+    dominate the mean loss for any estimator that ever hits a quiet
+    window (confirmed in F4: V05/V12 showed "average" QLIKE in the
+    trillions, entirely driven by a handful of degenerate bars). Fixed:
+    forecasts below min_forecast_var (default: 1e-6 of the median
+    positive forecast_var in this call, i.e. relative to the estimator's
+    own typical scale) are treated as undefined (NaN) and excluded,
+    rather than scored with an exploding ratio."""
+    forecast_var = np.asarray(forecast_var, dtype=np.float64)
+    if min_forecast_var is None:
+        positive = forecast_var[forecast_var > 0]
+        min_forecast_var = np.median(positive) * 1e-6 if len(positive) else 0.0
+    usable = forecast_var > max(min_forecast_var, 0.0)
+    ratio = np.where(usable, realized_var / np.where(usable, forecast_var, 1.0), np.nan)
     with np.errstate(invalid="ignore"):
         return np.where(ratio > 0, ratio - np.log(ratio) - 1, np.nan)
 
