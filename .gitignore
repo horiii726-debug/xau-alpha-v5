@@ -2,7 +2,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 data/raw/
-data/raw_candles/
 data/bars/
 data/bars_candles/
 data/logs/
