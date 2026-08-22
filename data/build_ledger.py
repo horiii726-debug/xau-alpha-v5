@@ -31,22 +31,56 @@ SOURCES = [
     ("F7_meta_ml.md", "M", "F7", "screen"),
 ]
 
-ROW_RE = re.compile(r"^\|\s*([^\|]+?)\s*\|\s*(\d+)\s*\|\s*(-?\d+\.?\d*)\s*\|\s*(-?\d+\.?\d*)\s*\|\s*(\d+)/(\d+)\s*\|")
+# Format lama (F5 dan laporan F6/F7 pra-run-penuh): nama|n_trade|exp_net_bps|t_stat|checks/total|...
+ROW_RE_OLD = re.compile(r"^\|\s*([^\|]+?)\s*\|\s*(\d+)\s*\|\s*(-?\d+\.?\d*)\s*\|\s*(-?\d+\.?\d*)\s*\|\s*(\d+)/(\d+)\s*\|")
+# Format baru (F6/F7 run penuh, punya kolom gross+breakeven tambahan):
+# nama|n_trade|gross_bps|net_bps|breakeven_bps|t_stat|checks/total|...
+ROW_RE_NEW = re.compile(
+    r"^\|\s*([^\|]+?)\s*\|\s*(\d+)\s*\|\s*(-?\d+\.?\d*)\s*\|\s*(-?\d+\.?\d*)\s*\|\s*(-?\d+\.?\d*)\s*\|\s*(-?\d+\.?\d*)\s*\|\s*(\d+)/(\d+)\s*\|"
+)
+# Format run parsial (dihentikan sebelum breakeven/batch-checks tersedia):
+# nama|n_trade|gross_bps|net_bps|t_stat|checks_parsial/12|
+ROW_RE_PARTIAL = re.compile(
+    r"^\|\s*([^\|]+?)\s*\|\s*(\d+)\s*\|\s*(-?\d+\.?\d*)\s*\|\s*(-?\d+\.?\d*)\s*\|\s*(-?\d+\.?\d*)\s*\|\s*(\d+)/(\d+)\s*\|"
+)
 
 
 def parse_table_rows(text: str):
     rows = []
     for line in text.splitlines():
-        m = ROW_RE.match(line.strip())
-        if not m:
+        line = line.strip()
+        if line.startswith("|---") or "| Kandidat " in line or "| Sinyal " in line:
             continue
-        name, n_trades, exp_bps, t_stat, passed, total = m.groups()
-        if name.startswith("Kandidat") or name.startswith("---"):
+        m_new = ROW_RE_NEW.match(line)
+        if m_new:
+            name, n_trades, gross_bps, net_bps, _breakeven, t_stat, passed, total = m_new.groups()
+            rows.append({
+                "candidate_id": name, "n_trades": n_trades, "expectancy_bps": net_bps,
+                "t_stat": t_stat, "checks_passed": passed, "checks_total": total,
+                "gross_bps": gross_bps,
+            })
             continue
-        rows.append({
-            "candidate_id": name, "n_trades": n_trades, "expectancy_bps": exp_bps,
-            "t_stat": t_stat, "checks_passed": passed, "checks_total": total,
-        })
+        m_old = ROW_RE_OLD.match(line)
+        if m_old:
+            name, n_trades, exp_bps, t_stat, passed, total = m_old.groups()
+            if name.startswith("Kandidat") or name.startswith("---"):
+                continue
+            rows.append({
+                "candidate_id": name, "n_trades": n_trades, "expectancy_bps": exp_bps,
+                "t_stat": t_stat, "checks_passed": passed, "checks_total": total,
+                "gross_bps": "",
+            })
+            continue
+        m_partial = ROW_RE_PARTIAL.match(line)
+        if m_partial:
+            name, n_trades, gross_bps, net_bps, t_stat, passed, total = m_partial.groups()
+            if total != "12":  # only treat as partial-format if checks denominator is /12 (non-batch-only)
+                continue
+            rows.append({
+                "candidate_id": name, "n_trades": n_trades, "expectancy_bps": net_bps,
+                "t_stat": t_stat, "checks_passed": passed, "checks_total": total,
+                "gross_bps": gross_bps,
+            })
     return rows
 
 
@@ -75,7 +109,10 @@ def main():
                 "eff_n": "", "ic": "", "t_stat": r["t_stat"], "p_raw": "", "p_effN": "",
                 "expectancy_bps": r["expectancy_bps"], "sharpe": "", "max_dd": "", "capture_ratio": "",
                 "status": f"{status} ({r['checks_passed']}/{r['checks_total']} checks, {phase})",
-                "notes": "SMOKE_TEST_50K_BARS_NOT_FULL_RUN" if is_smoke else "",
+                "notes": (
+                    "SMOKE_TEST_50K_BARS_NOT_FULL_RUN" if is_smoke
+                    else (f"gross_bps={r['gross_bps']}" if r.get("gross_bps") else "")
+                ),
             })
             trial_id += 1
 

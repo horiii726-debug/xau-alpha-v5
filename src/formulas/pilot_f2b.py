@@ -35,9 +35,10 @@ def e01_intraday_momentum(mid: np.ndarray, L: int = 12) -> np.ndarray:
 def e10_variance_ratio_lm(mid: np.ndarray, q: int = 4, window: int = 200) -> np.ndarray:
     r = np.diff(np.log(mid), prepend=np.log(mid[0]))
     sig = np.full(len(mid), np.nan)
+    rq_full = pd.Series(r).rolling(q).sum().values  # computed ONCE (was recomputed per-bar -- O(n^2))
     for t in range(window + q, len(mid)):
         r1 = r[t - window : t]
-        rq = pd.Series(r).rolling(q).sum().values[t - window : t]
+        rq = rq_full[t - window : t]
         var1 = np.var(r1)
         varq = np.var(rq[~np.isnan(rq)])
         if var1 <= 0 or len(rq[~np.isnan(rq)]) < 2:

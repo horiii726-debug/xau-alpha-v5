@@ -1,87 +1,70 @@
-# F6 -- Divisi E (Entry/Arah) + Adendum Z
+# F6 -- Divisi E (Entry/Arah) + Adendum Z -- RUN PARSIAL, DIHENTIKAN MANUAL
 
-> ⚠️ **BELUM SELESAI -- INI HASIL SMOKE TEST, BUKAN RUN PENUH.** Dijalankan
-> pada 50.000 bar M1 pertama saja (~11% dari partisi SCREEN penuh, ~451.008
-> bar), murni untuk mengecek skrip tidak crash sebelum run sesungguhnya. Run
-> penuh sempat dilaunch tapi DIHENTIKAN (pkill) sebelum selesai atas
-> instruksi user ("STOP semua proses yang jalan"), sebelum sempat menulis
-> laporan akhir yang sebenarnya. Angka di bawah TIDAK mewakili hasil final
-> F6 -- jangan dipakai sebagai vonis, hanya arah kasar. Perintah untuk
-> melanjutkan: `python data/run_f6_division_e.py` (~10 menit, lihat
-> RESUME.md).
+**PERINGATAN: run ini TIDAK SELESAI.** Dihentikan atas instruksi eksplisit user
+sebelum semua 56 sinyal dasar selesai dievaluasi. Yang ada di bawah ini adalah
+11 dari 56 sinyal dasar (E01 x4, E10 x4, E22_w96 x2, E22_w288_p1), dievaluasi
+di data SKALA PENUH (451.008 bar M1, bukan smoke test) sebelum dihentikan.
 
-XAUUSD, exit baseline X01 (k_sl=1.5,k_tp=2.5, H60 -- F5 tidak menemukan exit lebih baik). Entry di SETIAP bar sinyal formula != 0 (bukan acak), eksekusi t+1 (L9). SINGLE_ASSET_ONLY, UNDERPOWERED_PANEL. 55 kombinasi diuji dari registry 19 formula (7 pilot + 12 tambahan) -- BUKAN 56 penuh, lihat catatan cakupan. **Skala data: 50.000/451.008 bar (~11%) -- SMOKE TEST.**
+## Riwayat teknis run ini (jujur, biar tidak salah baca angkanya nanti)
 
-## Adendum Z -- TIDAK BISA diuji
+1. Percobaan pertama macet >10 menit tanpa progres pada E10_VARIANCE_RATIO_LM.
+   Diinvestigasi: `e10_variance_ratio_lm` menghitung ulang rolling-sum di
+   SELURUH array di dalam loop per-bar -- O(n^2), ~2x10^11 operasi pada skala
+   penuh. Diperbaiki (hitung sekali di luar loop), diverifikasi output numerik
+   identik, full test suite (103/103) tetap lolos.
+2. Run kedua: refactor internal (`build_all_base_signals`) sempat membuat
+   proses diam total sampai SEMUA 56 sinyal selesai dihitung baru mulai
+   mencetak progres -- terlihat seperti macet padahal jalan. Diperbaiki jadi
+   generator yang mencetak progres per sinyal.
+3. Run ketiga (ini): jalan normal, progres terlihat live. E01 (4 varian) dan
+   E10 (4 varian, sudah cepat pasca-perbaikan, ~8s/varian) selesai. E22 DFA
+   mulai terasa berat (~110-240s/varian, TIDAK ada bug -- ini implementasi
+   loop-per-bar Python murni yang memang berat di skala 451K bar, sudah
+   di-benchmark terpisah untuk konfirmasi bukan bug). Baru selesai 3/4 varian
+   E22 (window 96 p1, p2, window 288 p1) saat user minta STOP.
 
-Z02/Z03 (cross-sectional) butuh >1 instrumen -- panel cuma XAUUSD. Z01 butuh sinyal E yang SUDAH lolos F6 sebagai input untuk digerbangi -- kalau nol E yang lolos (lihat di bawah), Z01 tidak punya apapun untuk digerbangi. Dilaporkan sebagai gap nyata, bukan dilewati diam-diam.
+## 11 sinyal yang SEMPAT dievaluasi (data PENUH, checks di bawah ini masih
+PARSIAL -- hanya 12 gerbang non-batch, BELUM termasuk BH-FDR/DSR/PBO karena
+`apply_batch_checks` butuh SELURUH kandidat terkumpul dulu dan tidak pernah
+jalan di run yang dihentikan ini)
 
-## Ringkasan: 55 kandidat diuji, 0 lolos >=13/15 centang
+| Kandidat | N trade | Gross bps | Net bps | t-stat | Checks parsial (dari 12) |
+|---|---:|---:|---:|---:|---:|
+| E01_MOMENTUM_L6 | 19721 | -0.34 | -3.34 | -67.35 | 5/12 |
+| E01_MOMENTUM_L12 | 19722 | -0.37 | -3.37 | -67.92 | 5/12 |
+| E01_MOMENTUM_L24 | 19678 | -0.43 | -3.43 | -69.00 | 5/12 |
+| E01_MOMENTUM_L48 | 19631 | -0.29 | -3.29 | -66.10 | 5/12 |
+| E10_VARIANCE_RATIO_q2 | 19709 | -0.20 | -3.20 | -63.57 | 4/12 |
+| E10_VARIANCE_RATIO_q4 | 19707 | -0.19 | -3.19 | -63.19 | 4/12 |
+| E10_VARIANCE_RATIO_q8 | 19702 | -0.21 | -3.21 | -63.78 | 4/12 |
+| E10_VARIANCE_RATIO_q16 | 19696 | -0.20 | -3.20 | -63.45 | 4/12 |
+| E22_DFA_w96_p1 | 19705 | -0.29 | -3.29 | -65.74 | 5/12 |
+| E22_DFA_w96_p2 | 19705 | -0.25 | -3.25 | -64.89 | 4/12 |
+| E22_DFA_w288_p1 | 19711 | -0.26 | -3.26 | -65.20 | 5/12 |
 
-| Kandidat | N trade | Expectancy net bps | t-stat | Checks (dari 15) | DSR | BH-FDR | PBO |
-|---|---:|---:|---:|---:|---:|---|---:|
-| E80_QUANTREG_tau0.25 | 7033 | -1.46 | -7.63 | 5/15 | 0.000 | True | 0.964 |
-| E80_QUANTREG_tau0.5 | 7033 | -1.46 | -7.63 | 5/15 | 0.000 | True | 0.964 |
-| E80_QUANTREG_tau0.75 | 7033 | -1.46 | -7.63 | 5/15 | 0.000 | True | 0.964 |
-| E03_REVERSAL_L6_t2.0 | 73 | -2.15 | -2.36 | 5/15 | 0.000 | True | 0.964 |
-| E03_REVERSAL_L6_t1.5 | 207 | -2.49 | -4.40 | 5/15 | 0.000 | True | 0.964 |
-| E03_REVERSAL_L12_t2.0 | 74 | -2.67 | -2.87 | 5/15 | 0.000 | True | 0.964 |
-| E02_VOLSCALED_MOM_L6_t1.0 | 574 | -2.80 | -7.52 | 6/15 | 0.000 | True | 0.964 |
-| E01_MOMENTUM_L48 | 6909 | -2.85 | -16.75 | 6/15 | 0.000 | True | 0.964 |
-| E81_HUBER_SLOPE | 6976 | -2.90 | -17.10 | 5/15 | 0.000 | True | 0.964 |
-| E02_VOLSCALED_MOM_L24_t1.0 | 581 | -2.92 | -5.94 | 6/15 | 0.000 | True | 0.964 |
-| E71_COX_STUART_w48 | 6730 | -2.93 | -17.34 | 5/15 | 0.000 | True | 0.964 |
-| E01_MOMENTUM_L24 | 6802 | -2.94 | -16.95 | 6/15 | 0.000 | True | 0.964 |
-| E70_MANN_KENDALL_w48 | 6908 | -2.97 | -17.61 | 5/15 | 0.000 | True | 0.964 |
-| E70_MANN_KENDALL_w96 | 6996 | -3.02 | -18.91 | 5/15 | 0.000 | True | 0.964 |
-| E50_FFT_PERIOD_w96 | 7091 | -3.04 | -17.98 | 5/15 | 0.000 | True | 0.964 |
-| E71_COX_STUART_w96 | 6925 | -3.04 | -18.93 | 5/15 | 0.000 | True | 0.964 |
-| E64_REALIZED_SKEW_w288 | 7140 | -3.05 | -19.16 | 5/15 | 0.000 | True | 0.964 |
-| E70_MANN_KENDALL_w24 | 6796 | -3.06 | -17.97 | 5/15 | 0.000 | True | 0.964 |
-| E02_VOLSCALED_MOM_L12_t0.5 | 2195 | -3.06 | -13.74 | 6/15 | 0.000 | True | 0.964 |
-| E60_DRIFT_BURST_hm12_hv48 | 6745 | -3.07 | -17.42 | 6/15 | 0.000 | True | 0.964 |
-| E01_MOMENTUM_L12 | 6746 | -3.07 | -17.43 | 6/15 | 0.000 | True | 0.964 |
-| E02_VOLSCALED_MOM_L24_t0.5 | 2173 | -3.08 | -12.79 | 6/15 | 0.000 | True | 0.964 |
-| E03_REVERSAL_L12_t1.5 | 185 | -3.10 | -5.00 | 5/15 | 0.000 | True | 0.964 |
-| E30_ENTROPY_w288 | 129 | -3.10 | -1.78 | 5/15 | 0.000 | False | 0.964 |
-| E73_RUNS_TEST_w48 | 6579 | -3.11 | -17.89 | 5/15 | 0.000 | True | 0.964 |
-| E71_COX_STUART_w24 | 6406 | -3.15 | -18.61 | 5/15 | 0.000 | True | 0.964 |
-| E03_REVERSAL_L3_t1.5 | 214 | -3.15 | -6.29 | 5/15 | 0.000 | True | 0.964 |
-| E02_VOLSCALED_MOM_L6_t0.5 | 2206 | -3.16 | -15.31 | 6/15 | 0.000 | True | 0.964 |
-| E02_VOLSCALED_MOM_L12_t1.0 | 580 | -3.16 | -7.80 | 6/15 | 0.000 | True | 0.964 |
-| E50_FFT_PERIOD_w288 | 7195 | -3.16 | -19.25 | 5/15 | 0.000 | True | 0.964 |
-| E20_HURST_w576 | 6695 | -3.17 | -18.27 | 5/15 | 0.000 | True | 0.964 |
-| E60_DRIFT_BURST_hm6_hv24 | 6705 | -3.18 | -17.91 | 6/15 | 0.000 | True | 0.964 |
-| E01_MOMENTUM_L6 | 6706 | -3.18 | -17.92 | 6/15 | 0.000 | True | 0.964 |
-| E73_RUNS_TEST_w24 | 6492 | -3.19 | -18.40 | 5/15 | 0.000 | True | 0.964 |
-| E64_REALIZED_SKEW_w96 | 7022 | -3.22 | -19.77 | 5/15 | 0.000 | True | 0.964 |
-| E20_HURST_w288 | 6695 | -3.24 | -18.79 | 5/15 | 0.000 | True | 0.964 |
-| E64_REALIZED_SKEW_w48 | 6936 | -3.25 | -19.96 | 5/15 | 0.000 | True | 0.964 |
-| E11_VR_WRIGHT_q2 | 6701 | -3.25 | -19.03 | 5/15 | 0.000 | True | 0.964 |
-| E22_DFA_w288_p2 | 6690 | -3.25 | -19.02 | 5/15 | 0.000 | True | 0.964 |
-| E73_RUNS_TEST_w96 | 6660 | -3.26 | -18.99 | 5/15 | 0.000 | True | 0.964 |
-| E22_DFA_w288_p1 | 6698 | -3.26 | -19.07 | 5/15 | 0.000 | True | 0.964 |
-| E10_VARIANCE_RATIO_q8 | 6632 | -3.30 | -19.05 | 5/15 | 0.000 | True | 0.964 |
-| E10_VARIANCE_RATIO_q16 | 6632 | -3.31 | -19.30 | 5/15 | 0.000 | True | 0.964 |
-| E10_VARIANCE_RATIO_q4 | 6634 | -3.32 | -19.15 | 5/15 | 0.000 | True | 0.964 |
-| E22_DFA_w96_p2 | 6702 | -3.33 | -19.52 | 6/15 | 0.000 | True | 0.964 |
-| E11_VR_WRIGHT_q4 | 6697 | -3.34 | -19.74 | 5/15 | 0.000 | True | 0.964 |
-| E22_DFA_w96_p1 | 6696 | -3.35 | -19.79 | 5/15 | 0.000 | True | 0.964 |
-| E10_VARIANCE_RATIO_q2 | 6640 | -3.37 | -19.50 | 5/15 | 0.000 | True | 0.964 |
-| E11_VR_WRIGHT_q8 | 6696 | -3.37 | -20.09 | 5/15 | 0.000 | True | 0.964 |
-| E90_CUSUM_k0.5_h4.0 | 98 | -3.86 | -6.61 | 6/15 | 0.000 | True | 0.964 |
-| E03_REVERSAL_L3_t2.0 | 74 | -3.89 | -4.90 | 5/15 | 0.000 | True | 0.964 |
-| E30_ENTROPY_w48 | 63 | -5.08 | -2.96 | 6/15 | 0.000 | True | 0.964 |
-| E30_ENTROPY_w96 | 116 | -5.26 | -3.64 | 6/15 | 0.000 | True | 0.964 |
-| E04_GAP_CONT_t1.0 | 266 | -7.06 | -95.33 | 5/15 | 0.000 | True | 0.964 |
-| E04_GAP_CONT_t0.5 | 4213 | -8.65 | -140.42 | 6/15 | 0.000 | True | 0.964 |
+**Semua 11 gross bps NEGATIF.** Tidak ada satupun yang mendekati positif --
+berbeda dari smoke-test 30K-bar sebelumnya yang sempat menunjukkan beberapa
+sinyal lain (E80, E03, E02, dst -- BUKAN yang di atas) dengan gross positif
+kecil. Sinyal E80/E03/E02 dkk BELUM sempat dihitung ulang di skala penuh
+sebelum dihentikan -- statusnya benar-benar TIDAK DIKETAHUI di skala penuh,
+bukan "gagal", bukan "belum tentu lolos". Genuinely untested at this scale.
+
+## Yang TIDAK sempat dijalankan sama sekali di skala penuh
+
+- 45 dari 56 sinyal dasar (E22 sisanya, E30, E60, E70, E90, E02, E03, E04,
+  E11, E20, E50, E54, E64, E71, E73, E80, E81)
+- SEMUA kombinasi entry x exit (filter gross-positif tidak sempat jalan)
+- `apply_batch_checks` (BH-FDR, DSR, PBO) untuk kandidat manapun -- checks
+  di tabel atas HANYA 12 gerbang non-batch, BUKAN 15 penuh
+- Adendum Z (sudah diketahui TIDAK BISA diuji -- gap data cross-sectional
+  dan gap sinyal-lolos-untuk-digerbangi, lihat sesi sebelumnya)
 
 ## Vonis F6
 
-**NOL kandidat lolos >=13/15 checks.** Dicatat apa adanya -- lanjut ke F7 (divisi independen).
-
-Kandidat dengan expectancy tertinggi (belum lolos ambang penuh): E80_QUANTREG_tau0.25, -1.46 bps, 5/15 checks.
-
-## Catatan cakupan (jujur)
-
-19/56 formula E diuji (34 varian), plus Adendum Z 0/3 (gap data, lihat atas). Formula yang TIDAK diuji: E05-E09 (tidak ada di registry asli -- penomoran memang meloncat), E12, E21, E23-E29, E31-E36, E40-E45 (nonlinear/chaos, tier-3 mahal), E51-E53/E55, E61-E63/E65, E72/E74/E82/E83 (butuh implementasi Theil-Sen/Siegel/RANSAC robust slope tambahan), E91-E97 (changepoint/dependency lanjutan, sebagian tier-3). Ini eksplorasi breadth-first pada anggaran waktu terbatas, BUKAN klaim registry penuh teruji.
+**TIDAK ADA VONIS.** Run dihentikan sebelum cukup data untuk menyimpulkan
+apapun tentang divisi E secara keseluruhan. 11 sinyal yang sempat diuji
+semuanya gross negatif, tapi itu bukan sampel yang representatif dari 56
+formula -- E01 (momentum naif) dan E10/E22 (mean-reversion/persistence
+statistik) secara historis memang bukan kandidat kuat di M1 XAUUSD tanpa
+biaya sekalipun. Next step: lanjutkan run dari titik ini (bukan dari nol --
+lihat RESUME.md).

@@ -24,6 +24,8 @@ class CandidateEval:
     name: str
     n_trades: int
     expectancy_net_bps: float
+    expectancy_gross_bps: float
+    breakeven_cost_bps: float  # cost level at which net expectancy would hit exactly 0
     t_stat_eff_n: float
     beats_all_nulls: bool
     cpcv_path_positive_pct: float
@@ -70,17 +72,24 @@ def evaluate_candidate(
     mc5_base_params: dict = None,
 ) -> CandidateEval:
     n = len(trade_returns)
+    gross_bps_early = float(np.nanmean(trade_returns) * 1e4) if n else 0.0
     if n < 30:
         return CandidateEval(
-            name=name, n_trades=n, expectancy_net_bps=float(np.nanmean(trade_returns) * 1e4) if n else 0.0,
+            name=name, n_trades=n, expectancy_net_bps=gross_bps_early - cost_bps_worst,
+            expectancy_gross_bps=gross_bps_early, breakeven_cost_bps=gross_bps_early,
             t_stat_eff_n=0.0, beats_all_nulls=False, cpcv_path_positive_pct=0.0,
             bootstrap_ci95_excludes_zero=False, mc1_percentile=0.0, walkforward_sign_consistency_pct=0.0,
             seed_stable=False, last_third_significant=False, trades_per_year=0.0, mc3_pass=False, mc5_pass=False,
         )
 
     # 1. expectancy net bps at worst cost
+    expectancy_gross_bps = float(np.mean(trade_returns) * 1e4)
     net_returns = trade_returns - cost_bps_worst / 1e4
     expectancy_net_bps = float(np.mean(net_returns) * 1e4)
+    # breakeven_cost_bps: cost level (bps round-trip) at which net expectancy hits exactly 0.
+    # If gross is already <=0, no cost level saves it (breakeven cost would be negative/undefined
+    # in a useful sense) -- reported as 0.0 to mean "even zero cost wouldn't help".
+    breakeven_cost_bps = max(expectancy_gross_bps, 0.0)
 
     # 2. t-stat with effective N (Lopez de Prado uniqueness)
     label_ends = entry_bars + holding_bars
@@ -165,8 +174,9 @@ def evaluate_candidate(
         mc5_pass = mc5_res["gate_pass"]
 
     ev = CandidateEval(
-        name=name, n_trades=n, expectancy_net_bps=expectancy_net_bps, t_stat_eff_n=t_stat,
-        beats_all_nulls=beats_all_nulls, cpcv_path_positive_pct=cpcv_pct,
+        name=name, n_trades=n, expectancy_net_bps=expectancy_net_bps,
+        expectancy_gross_bps=expectancy_gross_bps, breakeven_cost_bps=breakeven_cost_bps,
+        t_stat_eff_n=t_stat, beats_all_nulls=beats_all_nulls, cpcv_path_positive_pct=cpcv_pct,
         bootstrap_ci95_excludes_zero=bootstrap_excludes_zero, mc1_percentile=mc1_pct,
         walkforward_sign_consistency_pct=wf_consistency, seed_stable=seed_stable,
         last_third_significant=last_third_significant, trades_per_year=trades_per_year,

@@ -1,4 +1,4 @@
-# RESUME — XAU Alpha V5, checkpoint 2026-08-22 ~01:45 UTC
+# RESUME — XAU Alpha V5, checkpoint 2026-08-22 ~03:55 UTC
 
 > Ditulis untuk melanjutkan sesi ini di VPS/environment lain. Baca
 > `xau_v5/00_KONTRAK_DAN_KELAYAKAN.md` sampai `07_FASE_EKSEKUSI.md` dulu
@@ -16,15 +16,16 @@
 | F3 | **BELUM DIKERJAKAN** | 129 sitasi masih NEED_LOOKUP, 0 diverifikasi. |
 | F4 | ⚠️ **SEBAGIAN** | V: 28/41 varian diuji, MCS alpha=0.10 → 7 survivor (bipower variation, MedRV, MinRV @w48/w96, GARCH baseline), juara tie-break `V07_BIPOWER_w48`. Q: 7/35 varian, 1 survivor `Q02_CORWIN_SCHULTZ_w48`. **T: 0/27, BLOKIR** — butuh timestamp tick individual, hilang sejak pindah ke candle M1 (lihat bagian Data). Detail: `reports/F4_estimation_champions.md`.
 | F5 | ✅ **SELESAI — NOL LOLOS** | Divisi X (exit/sizing), 34 kandidat (barrier X01-X03/X06, EVT stop X10-X11, optimal-stopping X20-X23, sizing X31-X33), entry acak H60, gate_checklist 15/17 centang tergradasi (MC2 PENDING, panel-consistency N/A). **0 lolos ≥13/15**. Expectancy terbaik: **-1.81 bps** (X10_POT_GPD). Detail: `reports/F5_exit_sizing.md`.
-| F6 | ❌ **TERPUTUS — TIDAK SELESAI** | Run penuh di-launch tapi DIHENTIKAN (`pkill`) atas instruksi user sebelum selesai. **`reports/F6_screening.md` yang ada di repo HANYA smoke test 50.000 bar (~11% dari 451.008 bar partisi SCREEN penuh)** — sudah ditandai jelas di file itu, JANGAN dipakai sebagai vonis final. Perintah lanjut: lihat di bawah. 19/56 formula E diimplementasi (di `src/formulas/pilot_f2b.py` + `src/formulas/division_e.py`), Adendum Z tidak bisa diuji (Z02/Z03 butuh panel >1 instrumen, Z01 butuh sinyal E yang sudah lolos).
-| F7 | ✅ **SELESAI — NOL LOLOS** | M06/M07/M08 (Lasso/Ridge/ElasticNet, CPCV purged+embargo) + M11 meta-labeling. 16 kandidat, 0 lolos ≥13/15. Expectancy terbaik: **-0.89 bps** (M11_META_LABELING_t0.5). Temuan menarik: meta-labeling MENGALAHKAN sinyal primer polos (-0.89 vs -3.38 bps) — membaik signifikan meski belum positif, konsisten teori meta-labeling. Model tree-ensemble (CatBoost/XGBoost/LightGBM) TIDAK diuji — belum terpasang. Detail: `reports/F7_meta_ml.md`.
+| F6 | ⚠️ **PARSIAL — DIHENTIKAN MANUAL** | Run skala PENUH (451.008 bar) di-launch 3x. Percobaan 1: macet — bug O(n²) nyata di `e10_variance_ratio_lm` (rolling-sum dihitung ulang di seluruh array tiap bar), DIPERBAIKI + diverifikasi (output numerik identik, 103/103 test tetap hijau). Percobaan 2: refactor internal sempat bikin proses diam sampai 56 sinyal selesai baru cetak progres — DIPERBAIKI jadi generator progresif. Percobaan 3: jalan normal, tapi **DIHENTIKAN atas instruksi eksplisit user** setelah 11/56 sinyal dasar selesai dievaluasi (E01 x4, E10 x4, E22 x3) — **di data PENUH, bukan smoke test**. Semua 11 gross expectancy NEGATIF. 45 sinyal sisanya + semua kombinasi entry×exit + batch checks (BH-FDR/DSR/PBO) BELUM sempat jalan. Detail & vonis parsial: `reports/F6_screening.md`. Cara lanjut: lihat perintah di bawah.
+| F7 | ⚠️ **KODE DIPERLUAS, BELUM DIJALANKAN PENUH** | M06/M07/M08 (Lasso/Ridge/ElasticNet) + **M01/M02/M03 tree-ensemble (CatBoost/XGBoost monotone/LightGBM) baru ditambahkan** + M11 meta-labeling dengan primer **dipilih dinamis** dari net-expectancy terbaik F6 (bukan hardcode) — semua kode sudah ditulis dan LOLOS smoke-test (30.000 bar, terbukti jalan tanpa error). **TAPI belum pernah dijalankan di skala penuh** karena F6 (sumber primer M11) sendiri belum selesai. `reports/F7_meta_ml.md` isinya HASIL SMOKE-TEST LAMA (pra tree-ensemble utk sebagian, primer M11=E80_QUANTREG_tau0.25 dari F6 smoke-test lama) — **ditandai tebal di header file, JANGAN dibaca sebagai final**.
 | F8-F11 | **TIDAK DIMULAI** | Sesuai instruksi: berhenti sebelum F8, jangan pre-register, jangan buka holdout. |
 
-**Kesimpulan sementara (BUKAN final — F6 belum selesai, F4/T blokir, panel cuma 1-2 instrumen):**
-Empat dari lima fase yang selesai (F2, F5, F7, dan F6-parsial) semuanya NOL LOLOS. Kalau F6 penuh juga nol,
-itu 4/4 divisi arah (X, E, M) + gerbang payoff nol semua di XAUUSD — sinyal kuat bahwa data yang ada
-(1 instrumen, 5 tahun, biaya belum lengkap) TIDAK cukup untuk membuktikan edge apapun, BUKAN berarti
-tidak ada edge. Lihat `protokol_nol_lolos` di `xau_v5/06_GERBANG_DAN_ANGGARAN.md`.
+**Kesimpulan sementara (BUKAN final — F6 baru 11/56 sinyal, F7 belum jalan penuh, F4/T blokir, panel cuma 1-2 instrumen):**
+F2 dan F5 (selesai penuh) NOL LOLOS. F6 (11/56 sinyal, data penuh) semuanya gross negatif sejauh ini tapi
+sampelnya kecil dan bukan representatif (formula yang sempat diuji secara historis memang lemah). F7 kode-nya
+siap tapi belum ada hasil skala-penuh sama sekali. Terlalu dini untuk kesimpulan definitif — TIDAK bisa bilang
+"4/4 nol" karena 2 dari 4 fase itu (F6, F7) belum benar-benar selesai diuji. Lihat `protokol_nol_lolos` di
+`xau_v5/06_GERBANG_DAN_ANGGARAN.md` untuk langkah SETELAH semua fase benar-benar tuntas.
 
 ---
 
@@ -83,7 +84,7 @@ tidak ada edge. Lihat `protokol_nol_lolos` di `xau_v5/06_GERBANG_DAN_ANGGARAN.md
 | X (exit/sizing) | 15/22 formula diimplementasi, 34 varian diuji | 114 varian | `src/formulas/division_x_*.py` |
 | E (entry) | 19/56 formula, 34+ varian diuji (sebagian smoke-test saja) | 209 varian | `src/formulas/pilot_f2b.py` + `division_e.py` |
 | Z (Adendum) | 0/3 — tidak bisa diuji (butuh panel/sinyal lolos) | 17 varian | `src/formulas/` (belum ada, spec di `xau_v5/ADENDUM_Z_ENTRY.md`) |
-| M (ML) | Lasso/Ridge/ElasticNet/meta-labeling (4/15 formula); tree-ensemble TIDAK (butuh catboost/xgboost/lightgbm, belum terpasang) | 81 varian | `data/run_f7_division_m.py` |
+| M (ML) | Lasso/Ridge/ElasticNet/meta-labeling/CatBoost/XGBoost(monotone)/LightGBM (7/15 formula, KODE siap semua) — TAPI tree-ensemble+M11-dinamis baru diverifikasi lewat smoke-test 30K bar, BELUM full-scale | 81 varian | `data/run_f7_division_m.py` |
 
 Ini eksplorasi breadth-first pada anggaran waktu terbatas — BUKAN klaim registry penuh teruji.
 Infrastruktur pengujian (gate_checklist 15/17, CPCV, MCS, null benchmarks, MC1/3/5, numba JIT triple-barrier)
@@ -104,20 +105,33 @@ pip install --upgrade pip wheel setuptools
 pip install -r requirements.txt
 
 # 3. Verifikasi semua test masih hijau
-pytest tests/ -v   # harus 102/102 (atau lebih kalau ditambah) passed
+pytest tests/ -v   # harus 103/103 passed
 
-# 4. LANGKAH BERIKUTNYA YANG PALING PENTING -- selesaikan F6 dulu (belum tuntas):
+# 4. LANGKAH BERIKUTNYA YANG PALING PENTING -- F6 baru 11/56 sinyal, SELESAIKAN dulu:
 python data/run_f6_division_e.py
-# ~10 menit di 451.008 bar penuh (skala dari smoke test: 66 detik utk 50.000 bar).
-# Akan menimpa reports/F6_screening.md dengan hasil PENUH (bukan smoke test lagi).
+# TIDAK ADA checkpoint parsial di dalam skrip -- run ini akan mengulang dari
+# sinyal pertama (E01), bukan lanjut dari sinyal ke-12. Estimasi total waktu
+# ~35-45 menit di 451.008 bar (E01+E10 cepat ~1 menit total, E22/E30/E70/E20
+# yang berat -- SUDAH di-benchmark per-formula, BUKAN dugaan, lihat riwayat
+# teknis di reports/F6_screening.md). JANGAN interupsi kalau tidak perlu --
+# progres tercetak per sinyal (~1-4 menit per baris untuk formula berat),
+# diam beberapa menit itu WAJAR bukan macet, cek `ps` kalau ragu.
+# Akan menimpa reports/F6_screening.md dengan hasil PENUH.
 
-# 5. Setelah F6 selesai, cek vonis akhir 4 fase (F2,F5,F6,F7):
+# 5. Setelah F6 BENAR-BENAR selesai (semua 56 sinyal + kombinasi entry x exit
+#    + apply_batch_checks jalan sampai akhir skrip, exit code manapun OK):
+python data/run_f7_division_m.py
+# M11 akan otomatis pakai sinyal E net-expectancy terbaik dari F6_screening.md
+# yang BARU (parsing otomatis, lihat load_best_f6_base_signal_name() di skrip).
+# ~10-15 menit (CPCV 12 path x ~10 model linear+tree, subsample 15rb baris).
+
+# 6. Setelah F6 DAN F7 selesai penuh, cek vonis akhir 4 fase (F2,F5,F6,F7):
 #    Kalau SEMUA nol lolos -> jalankan protokol_nol_lolos dari langkah 1
 #    (xau_v5/06_GERBANG_DAN_ANGGARAN.md), MULAI dari langkah 3 (perbesar
 #    panel) karena langkah 1 (horizon) sudah dicoba (F2, gagal semua) dan
 #    langkah 2 (sesi/jam) juga sudah dicoba (gagal, lihat F2_langkah2_sesi_jam.md).
 
-# 6. Kalau mau lanjut panel: resume download XAGUSD dari hari 1207, lalu EURUSD, USOIL:
+# 7. Kalau mau lanjut panel: resume download XAGUSD dari hari 1207, lalu EURUSD, USOIL:
 python data/download_candles.py --start 2021-08-22 --end 2026-08-21
 # Skrip otomatis skip hari yang sudah ada (resumable), JALANKAN VIA nohup:
 nohup python -u data/download_candles.py --start 2021-08-22 --end 2026-08-21 \
@@ -127,7 +141,7 @@ nohup python -u data/download_candles.py --start 2021-08-22 --end 2026-08-21 \
 # = sekitar 2.9 jam kalau lancar, BISA lebih lama kalau kena rate-limit lagi
 # (skrip sudah self-healing, cuma lambat).
 
-# 7. Rebuild ledger setelah fase baru selesai:
+# 8. Rebuild ledger setelah fase baru selesai:
 python data/build_ledger.py
 ```
 
@@ -145,19 +159,59 @@ src/
   formulas/                 -- division_v, division_q, division_x_*, division_e, pilot_f2b
 data/                       -- semua skrip runner (download_candles.py, run_f*.py, build_ledger.py)
 data/raw_candles/           -- data M1 mentah (lihat tabel Data di atas)
-tests/                      -- 102 test, semua hijau
+tests/                      -- 103 test, semua hijau
 reports/                    -- laporan tiap fase (.md)
-ledger_trials.csv           -- konsolidasi semua kandidat yang diuji (108 baris per checkpoint ini)
+ledger_trials.csv           -- konsolidasi semua kandidat yang diuji (76 baris per checkpoint ini --
+                                TURUN dari checkpoint sebelumnya 108 karena 55 baris F6 SMOKE-TEST LAMA
+                                digantikan 11 baris F6 PARSIAL SKALA-PENUH yang lebih valid, dan F7
+                                sekarang 29 baris smoke-test M01-M11 vs 17 sebelumnya M06-M11 saja)
 PATCH_01_ANGGARAN.md + .sha256  -- (di xau_v5/) kunci pra-registrasi keputusan anggaran ronde 1+2
 requirements.txt            -- freeze pip lengkap (140 paket)
 ```
 
 ---
 
+## DAFTAR YANG BELUM DIUJI (per divisi, dicek ke `ledger_trials.csv` -- BUKAN ditebak)
+
+**Divisi V (volatilitas, 14 formula/41 varian):** 28/41 varian teruji (F4). Belum: 13 varian sisa
+(kombinasi window/estimator yang belum sempat di grid F4 karena anggaran waktu). Lihat `reports/F4_estimation_champions.md`.
+
+**Divisi Q (spread, 12 formula/35 varian):** 7/35 varian teruji (F4). Belum: 28 varian sisa.
+
+**Divisi T (intensitas tick, 10 formula/27 varian):** 0/27. BLOKIR total -- butuh timestamp tick individual,
+data yang ada cuma M1 candle. Perlu re-download tick-level utk instrumen manapun sebelum divisi ini bisa jalan sama sekali.
+
+**Divisi X (exit/sizing, 22 formula/114 varian):** 34 varian teruji (F5, semua di ledger trial_id 1-36),
+15/22 formula diimplementasi. Belum diimplementasi: X15-X19, X25-X29 (lihat `xau_v5/DIVISI_X_EXIT_SL_TP_SIZING.md`
+utk daftar lengkap ID). Vonis F5: NOL LOLOS, terbaik -1.81bps (X10_POT_GPD).
+
+**Divisi E (entry, 56 formula/209 varian):** HANYA 11/56 formula-varian teruji SEJAUH INI (E01 x4, E10 x4,
+E22 x3 -- di ledger trial_id 37-47, formula_id E01/E10/E22), semua di data skala PENUH. 45 sinyal dasar
+BELUM tersentuh sama sekali di run ini: E22 sisa (1 varian), E30, E60, E70, E90 (7 formula pilot sisa),
+E02, E03, E04, E11, E20, E50, E54, E64, E71, E73, E80, E81 (12 formula tambahan). Plus formula yang dari
+awal tidak diimplementasi: E12, E21, E23-E29, E31-E36, E40-E45, E51-E53/E55, E61-E63/E65, E72/E74/E82/E83,
+E91-E97 (lihat `xau_v5/DIVISI_E_ENTRY_ARAH.md`). **Belum ada vonis** -- run dihentikan manual sebelum cukup data.
+
+**Divisi M (ML, 15 formula/81 varian):** KODE utk 7/15 formula (M06/M07/M08/M11 + M01/M02/M03 baru)
+SUDAH SIAP, tapi HANYA diverifikasi lewat smoke-test 30K bar (ledger trial_id 48-76, semua status
+`gross_bps=` di notes, BUKAN hasil final). Belum diimplementasi sama sekali: M04/M05/M09/M10 (formula
+tree/ensemble lain di luar CatBoost/XGBoost/LightGBM), M12-M15 (lihat `xau_v5/DIVISI_M_ML_METALABELING.md`).
+
+**Adendum Z (3 formula/17 varian):** 0/3, TIDAK BISA diuji dengan data/hasil yang ada (Z02/Z03 butuh
+panel >1 instrumen dengan histori sebanding, Z01 butuh sinyal E yang sudah lolos F6 sebagai input).
+
+**Ledger:** 76 baris total (F2: 0 baris granular -- lihat poin 5 di bawah, tapi F2 tetap SELESAI dan
+vonisnya NOL LOLOS di level agregat; F5: 36; F6: 11; F7: 29). `screen_max`/anggaran trial resmi
+BELUM pernah dihitung dari K_eff nyata (poin 4 di bawah) -- semua nomor di atas adalah HITUNGAN
+EKSPLORASI, bukan dibandingkan ke anggaran resmi.
+
+---
+
 ## Catatan integritas yang WAJIB dibaca sebelum lanjut
 
-1. **F6 belum selesai.** Jangan kutip `reports/F6_screening.md` sebagai hasil final — file itu sudah
-   diberi peringatan tebal di headernya, tapi tegaskan lagi di sini supaya tidak terlewat.
+1. **F6 baru 11/56 sinyal, F7 belum jalan skala penuh sama sekali.** Jangan kutip `reports/F6_screening.md`
+   atau `reports/F7_meta_ml.md` sebagai hasil final — kedua file sudah diberi peringatan tebal di headernya,
+   tapi tegaskan lagi di sini supaya tidak terlewat.
 2. **Ledger `ledger_trials.csv` tidak lengkap secara kolom** — `eff_n`, `ic`, `p_raw`/`p_effN`, `sharpe`,
    `max_dd`, `capture_ratio` kosong karena tidak dipersist individual saat run (cuma t_stat, n_trades,
    expectancy_bps, dan jumlah centang lolos yang disimpan). Kalau mau kolom itu terisi, perlu re-run
@@ -168,3 +222,10 @@ requirements.txt            -- freeze pip lengkap (140 paket)
    (baru bisa setelah panel >=2 instrumen lengkap). `screen_max` yang dipakai sepanjang F4-F7 BUKAN
    hasil formula `min(500, floor(50*K_eff))` — semua dijalankan sebagai eksplorasi tanpa anggaran resmi,
    sesuai instruksi eksplisit user.
+5. **BARU DITEMUKAN saat checkpoint ini: `data/build_ledger.py` tidak bisa mem-parse detail per-kombinasi
+   F2** (`reports/F2_payoff_gate.md` isinya ringkasan per-horizon, BUKAN tabel per k_sl/k_tp/side yang
+   diharapkan parser F2-nya) — jadi ledger TIDAK punya baris individual utk ~200 kombinasi F2 yang
+   sebenarnya dijalankan (cuma agregat "36/38/42/42/42 lolos margin dasar, 0 lolos semua syarat" di
+   `F2_payoff_gate.md` sendiri). Vonis F2 (NOL LOLOS) tetap valid dan tidak berubah — ini murni gap
+   granularitas ledger, bukan gap hasil. Belum diperbaiki karena di luar scope checkpoint ini
+   (butuh keputusan: re-run F2 dengan log per-baris, atau terima gap ini).
