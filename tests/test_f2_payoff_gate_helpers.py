@@ -7,7 +7,7 @@ from run_f2_payoff_gate import demean_series, sign_flipped_series, _log_shift_oh
 
 def test_demean_series_preserves_length():
     mid = np.array([100.0, 101.0, 99.0, 102.0, 103.0, 104.0, 102.5])
-    d = demean_series(mid, window_days=1, bars_per_day=2)
+    d = demean_series(mid, window_minutes=2)
     assert len(d) == len(mid)
 
 
