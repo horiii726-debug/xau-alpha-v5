@@ -225,6 +225,36 @@ def main():
         if len(rets) > 30:
             run_and_eval(f"X23_ULTIMATE_MAX_c{c}", np.array(rets), np.array(holds), np.array(used_entries))
 
+    print("\n=== X30-X33 sizing (di atas baseline X06 vertical, arah entry acak) ===")
+    train_res = triple_barrier_labels(
+        train["bid_open"].values, train["ask_high"].values, train["bid_low"].values, train["mid_close"].values,
+        np.arange(SIGMA_WINDOW + 1, len(train) - MAX_HOLD_BARS - 1, max(1, (len(train) - MAX_HOLD_BARS - SIGMA_WINDOW - 2) // 2000)),
+        np.random.default_rng(1).choice([1, -1], size=2000), parkinson_sigma(train["ask_high"].values, train["bid_low"].values, SIGMA_WINDOW),
+        1.5, 2.5, MAX_HOLD_BARS,
+    )
+    train_valid = train_res.outcome != 0
+    p_win_train = float((train_res.outcome[train_valid] == 1).mean())
+    payoff_b_train = 2.5 / 1.5  # k_tp/k_sl, matches X01 baseline ratio used for the sizing target signal
+
+    base_ret = vert_ret  # X06 baseline per-trade return (already computed above)
+    for lam in [0.10, 0.25, 0.33, 0.50]:
+        f = xs.x31_fractional_kelly(p_win_train, payoff_b_train, lam)
+        f = float(np.clip(f, 0.0, 3.0))
+        sized_ret = base_ret * f
+        run_and_eval(f"X31_FRACTIONAL_KELLY_lam{lam}_f{f:.3f}", sized_ret, np.full(N_ENTRIES, MAX_HOLD_BARS), entries)
+
+    for target_vol_bps in [50, 100, 150]:
+        size_mult = xs.x32_volatility_targeting(sigma[entries], target_vol_bps, size_cap=3.0)
+        sized_ret = base_ret * size_mult
+        run_and_eval(f"X32_VOL_TARGETING_tv{target_vol_bps}", sized_ret, np.full(N_ENTRIES, MAX_HOLD_BARS), entries)
+
+    equity_curve = np.cumprod(1 + base_ret)
+    for gamma in [1.0, 2.0]:
+        for f_max in [0.5, 1.0]:
+            size_mult = xs.x33_drawdown_constrained_sizing(equity_curve, dd_limit_pct=10.0, gamma=gamma, f_max=f_max)
+            sized_ret = base_ret * size_mult
+            run_and_eval(f"X33_DRAWDOWN_CONSTRAINED_g{gamma}_fmax{f_max}", sized_ret, np.full(N_ENTRIES, MAX_HOLD_BARS), entries)
+
     print(f"\n{len(all_evals)} kandidat X dievaluasi. Menjalankan batch check (BH-FDR, DSR, PBO)...")
     apply_batch_checks(all_evals, n_trials_cumulative=len(all_evals) + 30, trial_sharpe_std=0.3)
 
