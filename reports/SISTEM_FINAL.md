@@ -1,82 +1,78 @@
-# SISTEM TRADING XAU v7 -- STOP di Uji Prioritas
+# SISTEM TRADING XAU v7.1 -- HASIL AKHIR: NOL SURVIVOR
 
-**Status: BERHENTI sebelum Bagian A dimulai.** Sesuai instruksi eksplisit:
-*"Kalau CUSUM gagal dua itu [D3.1 drift capture, D3.3 walk-forward], STOP dan
-lapor -- sisanya percuma."* CUSUM gagal **KEDUANYA**. Bagian A-E (keluarga
-MOM/MRV, sizing, router, backtest sistem utuh, ML) **tidak dikerjakan** --
-membangunnya di atas sinyal yang gagal uji dasar akan membuang waktu untuk
-hasil yang sudah bisa diprediksi tidak berarti.
+**Status: SELESAI diuji, NOL survivor.** Ini jawaban sah (sesuai instruksi:
+*"Kalau tetap nol setelah G1-G4, laporkan nol"*). Bagian A-E dari
+`SISTEM_TRADING_V7.md` **tidak dikerjakan** -- tidak ada apapun untuk
+dibangun di atasnya.
 
-Detail penuh & angka: `reports/D3_PRIORITY_TESTS.md`, grafik:
-`reports/figs/d3_priority_tests.png`.
+## Ringkasan 3 langkah
 
-## Apa yang ditemukan
+| Langkah | Isi | Hasil |
+|---|---|---|
+| **L1** | Autopsi arm demeaned long-only (CUSUM) -- 4 uji | **1/4 lolos.** t-stat eff_N=0.72 (n mentah 11.942, eff_N cuma 991 -- rasio keunikan 8.3%), walk-forward 4/10 dengan 254% PnL dari 2 jendela, biaya worst negatif. |
+| **L2** | Unduh XAUUSD H1 2003-2026 (203k bar, 31 detik) | **Verifikasi LOLOS.** 6 tahun negatif (2013 -27.9%, 2014, 2015, 2018, 2021, 2022) -- bear market 2012-2015 sekarang tercakup. |
+| **L3** | Ulang Lomba 2 & 4 di data penuh, gerbang G1-G4 di DEPAN peringkat | **NOL survivor di keduanya.** Lomba 4: 0/36 kombinasi. Lomba 2: 0/42 kombinasi. **83/84 gagal di G1 (simetri long/short).** |
 
-**D3.1 -- Drift capture: GAGAL.**
+Detail penuh: `L1_AUTOPSI_DEMEANED.md`, `L2_DATA_VERIFICATION.md`,
+`L3_LOMBA4_H1.md`, `L3_LOMBA2_H1.md`. Lomba 5 (SL/TP) **tidak dijalankan** --
+tidak ada entry yang lolos untuk dikunci sebagai dasar uji barrier.
 
-| Sisi | Expectancy net (raw) | p-value | Expectancy net (demeaned) |
-|---|---:|---:|---:|
-| LONG | **+7.88 bps** | 0.0000 | +2.06 bps |
-| SHORT | **-8.31 bps** | 1.0000 | -2.91 bps |
-| Gabungan | -0.10 bps | 0.5625 | -0.39 bps |
+## Angka kunci
 
-SHORT negatif dan tidak signifikan di kedua arm (raw maupun demeaned). Bahkan
-setelah membuang tren rata-rata bergulir 60 hari, pola LONG-untung/SHORT-rugi
-tetap ada (walau mengecil). **Ini tanda tangan klasik drift capture** --
-CUSUM tidak mendeteksi "perubahan rezim" yang genuinely dua-arah; dia
-menumpang tren naik emas dan hanya menang saat kebetulan searah dengannya.
+```
+L1 -- arm demeaned long-only (CUSUM @H=1d):
+  n mentah=11942, eff_N=991.5 (rasio keunikan 8.3%)
+  t-stat(eff_N)=0.722, p=0.4707        <- jauh dari signifikan
+  walk-forward: 4/10, 254.7% PnL dari 2 jendela  <- makin buruk dari versi mentah
+  biaya worst: expectancy -1.06bps      <- negatif
 
-**D3.3 -- Walk-forward: GAGAL.**
+L3 -- Lomba 4 (entry), H1 2003-2026, 36 kombinasi (6 peserta x 3 horizon x 2 tau):
+  34 gagal G1 (simetri)   2 gagal G4 (walk-forward)   0 lolos semua
 
-5 dari 10 jendela positif (syarat >=7/10). Yang positif justru menumpuk di
-jendela 9 dan 10 (paling akhir, +10.8bps dan +8.8bps) -- persis periode
-menjelang rentang yang dipakai sebagai partisi UJI di Lomba 4 sebelumnya.
-**Kemenangan +14.1bps yang dilaporkan di Lomba 4 adalah artefak dari menguji
-HANYA di periode itu**, bukan kinerja yang stabil sepanjang waktu.
+L3 -- Lomba 2 (tren), H1 2003-2026, 42 kombinasi (7 peserta x 3 N x 2 tau):
+  41 gagal G1 (simetri)   1 gagal G2 (demeaned)        0 lolos semua
+```
 
-## Kenapa ini masuk akal (bukan kejutan yang seharusnya tidak terjadi)
+## Kesimpulan jujur
 
-Sampel 2021-2026 didominasi kenaikan emas dari ~$1780 ke ~$4570 (lihat
-`F0_cost_regime.md` -- tabel harga rata-rata per tahun dari riset F0/F1
-sebelumnya). Sinyal apapun yang cenderung LONG lebih sering akan tampak
-"menang" kalau diuji di jendela waktu yang didominasi tren naik, terutama di
-periode 2024-2026 (harga naik dari $2389 ke $4572, +91%). Ini persis pola
-yang sudah diperingatkan sejak dokumen v5/v6 lama: *"sampel 2021-2026 hanya
-memuat satu rezim: emas naik... sisi short tidak pernah diuji dengan adil."*
-Lomba 4 (dan Lomba 5 yang menumpang di atasnya) tidak sengaja mengulangi
-kesalahan yang sama karena keduanya tidak memisahkan long/short maupun
-menguji stabilitas lintas waktu -- baru ketahuan sekarang di uji prioritas ini.
+**Tidak ada edge arah yang bisa dieksploitasi di XAU pada horizon 6 jam
+sampai 5 hari, dengan kelas rumus yang diuji (momentum, reversal, breakout,
+drift-burst, CUSUM, dan enam estimator kemiringan), pada biaya prop firm,
+setelah data diperluas ke 23 tahun dan gerbang simetri long/short dipasang
+di depan.**
 
-## Apa yang TETAP valid dari 5 Lomba sebelumnya
+Ini bukan "belum cukup diuji". 84 kombinasi diuji di data yang sekarang
+memuat bull run (2003-2011, 2019-2026), bear market penuh (2012-2015,
+-27.9% di 2013 saja), dan periode sideways/turun (2016-2019, 2018, 2021-2022)
+-- persis rezim yang hilang di riset-riset sebelumnya. 83 dari 84 tetap
+gagal di gerbang PALING DASAR (G1: untung di long DAN short) -- bukan gagal
+di uji lanjutan yang lebih halus.
 
-- **Lomba 1 (HAR-RV menang volatilitas)** -- tidak terpengaruh, ini soal
-  akurasi prediksi varians, bukan arah, tidak ada bias long/short.
-- **Lomba 3 (entropi menang rezim)** -- juga tidak arah-spesifik (AUC untuk
-  klasifikasi trending/ranging, dua kelas seimbang secara konstruksi), tapi
-  BELUM diuji drift-capture/walk-forward sendiri -- statusnya "kemungkinan
-  aman" bukan "terbukti aman".
-- **Lomba 2 (tren)** -- sudah dilaporkan tidak ada pemenang, tidak berubah.
-- **Lomba 4 & 5 (CUSUM entry + barrier)** -- **DIBATALKAN sebagai temuan.**
-  Angka +14.1bps dan +19.8bps yang dilaporkan sebelumnya **valid secara
-  komputasi** (bukan bug) tapi **tidak valid sebagai bukti edge** -- keduanya
-  adalah produk sampel yang bias-tren, bukan sinyal yang robust.
+**Kesalahan yang diakui dan sudah diperbaiki dalam proses ini:** Lomba 4
+(sebelum V7.1) melaporkan CUSUM menang +14.1 bps tanpa memeriksa simetri
+long/short atau stabilitas lintas rezim -- persis kontradiksi dengan Lomba 2
+(tren, tidak ada juara) yang seharusnya sudah jadi tanda bahaya sebelum
+Bagian A-E ditulis. Gerbang G1-G4 sekarang wajib di depan untuk SEMUA lomba
+arah berikutnya, permanen.
 
-## Rekomendasi jujur
+## Tiga pilihan jalan ke depan (sesuai dokumen V7.1, tidak ditambah-tambah)
 
-**Jangan lanjutkan ke Bagian A-E di atas fondasi CUSUM.** Dua jalan ke depan:
+| Pilihan | Isi | Cocok prop firm? |
+|---|---|---|
+| **A. Ganti horizon** | Naik ke H=5-20 hari (bukan cuma sampai 5 hari yang sudah diuji) -- biaya relatif sigma jadi jauh lebih kecil. | Ya, tapi trade/tahun sedikit -- belum diuji di V7.1 ini |
+| **B. Ganti kelas edge** | Bukan arah: spread lintas-aset (XAU/XAG, XAU/DXY), musiman sesi, event-driven (FOMC/NFP). | Ya -- belum diuji sama sekali |
+| **C. Terima beta** | Emas long-only, vol-target 8-10%, rebalance -- strategi nyata dan jujur. | **TIDAK** -- prop firm melarang |
 
-1. **Ulangi Lomba 4 dengan D3.1/D3.3 sebagai gerbang WAJIB, bukan uji
-   belakangan** -- setiap kandidat entry (termasuk keluarga MOM/MRV yang
-   belum diuji) harus lolos long-vs-short DAN walk-forward SEBELUM
-   dinyatakan menang, bukan setelah. Kandidat lain di Lomba 4 (MAD-Zscore,
-   Momentum-VolScaled, dll) juga perlu diuji ulang dengan gerbang ini --
-   belum tentu mereka lolos, belum tentu juga semuanya gagal seperti CUSUM.
-2. **Perpanjang riwayat data** -- 5 tahun (2021-2026) mustahil memuat rezim
-   emas turun/sideways yang cukup untuk menguji sisi short secara adil.
-   Perluasan data yang sempat dicoba sebelumnya (dukascopy-node, mundur ke
-   2012) relevan lagi di sini, bukan cuma untuk K_eff.
+**Yang dilarang keras** (sesuai instruksi): menurunkan ambang G1-G4,
+membuang gerbang simetri, atau kembali menguji cuma di 2021-2026. Tidak ada
+satupun dari itu dilakukan di sini.
 
-**Tidak ada dashboard sistem akhir atau `config/sistem_final.yaml`** --
-membuatnya sekarang berarti mengkodekan aturan EA di atas sinyal yang
-terbukti drift capture, persis kesalahan yang coba dihindari proyek ini
-sejak awal.
+## Tidak ada file berikut, dan itu keputusan yang benar
+
+`reports/A_keluarga_entry.md`, `B_sizing_gerbang.md`, `C_router.md`,
+`D_sistem_utuh.md`, `E_metalabeling.md`, `dashboard_v7.png`,
+`config/sistem_final.yaml` -- **tidak dibuat.** Membuatnya berarti mengkodekan
+aturan EA di atas nol sinyal yang terbukti tidak dua-arah, setelah dua ronde
+pengujian (2021-2026 lalu 2003-2026) menunjukkan hasil yang sama. HOLDOUT
+(15% terakhir, ~2023-2026) **tidak pernah dibuka** -- tidak ada sistem yang
+lolos sampai ke tahap itu.
