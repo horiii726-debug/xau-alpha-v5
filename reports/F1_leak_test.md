@@ -16,7 +16,7 @@ tests/test_l10_leakage.py::test_deliberately_leaky_feature_beats_all_must_beat_a
 tests/test_l10_leakage.py::test_pure_random_signal_does_not_beat_any_null PASSED [ 75%]
 tests/test_l10_leakage.py::test_causal_signal_cannot_see_same_bar_leak_when_properly_shifted PASSED [100%]
 
-============================== 4 passed in 1.48s ===============================
+============================== 4 passed in 1.44s ===============================
 
 
 ```

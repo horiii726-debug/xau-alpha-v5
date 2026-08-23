@@ -163,13 +163,17 @@ ax = axes[3, 1]
 na_panel(ax, "8. Bobot 3 keluarga (MOM/MRV/BRK) dari router sepanjang waktu",
          "F7b (router multi-strategi) belum dijalankan\nproyek berhenti di F0")
 
-# ---- 9. Kappa per horizon per skenario biaya ----
+# ---- 9. Kappa per horizon per skenario biaya (REZIM-SEKARANG, 3 thn terakhir) ----
 ax = axes[4, 0]
 horizons = [("H15", 15), ("H60", 60), ("H120", 120), ("H240", 240), ("H1D", 1440)]
 x = np.arange(len(horizons))
 width = 0.35
 for offset, symbol, color in [(-width/2, "XAUUSD", "#b8860b"), (width/2, "XAGUSD", "#708090")]:
     bars_df = pd.read_parquet(BAR_DIR / f"{symbol}_M5.parquet")
+    bars_df["bar_time"] = pd.to_datetime(bars_df["bar_time"], utc=True)
+    years_avail = sorted(bars_df["bar_time"].dt.year.unique().tolist())
+    recent = years_avail[-3:]
+    bars_df = bars_df[bars_df["bar_time"].dt.year.isin(recent)]
     bars_df["mid_ret"] = bars_df["mid_close"].pct_change()
     sigma_m5 = bars_df["mid_ret"].std() * 1e4
     sb = bars_df["spread_bps"].dropna()
@@ -181,10 +185,10 @@ for offset, symbol, color in [(-width/2, "XAUUSD", "#b8860b"), (width/2, "XAGUSD
     slip = 1.5 * p90 + 0.5 * sigma_lat10
     total_worst = (2 * p90 + slip) * 1.5 + komisi_rt
     kappas = [total_worst / (sigma_m5 * np.sqrt(m / 5.0)) for _, m in horizons]
-    ax.bar(x + offset, kappas, width, label=symbol, color=color)
+    ax.bar(x + offset, kappas, width, label=f"{symbol} ({recent[0]}-{recent[-1]})", color=color)
 ax.set_xticks(x); ax.set_xticklabels([h[0] for h in horizons])
-ax.set_title("9. Kappa (biaya_worst/volatilitas) per horizon", fontsize=11, fontweight="bold")
-ax.set_ylabel("kappa (worst)"); ax.legend(fontsize=9)
+ax.set_title("9. Kappa per horizon -- REZIM-SEKARANG (3thn terakhir, bukan seluruh riwayat)", fontsize=10, fontweight="bold")
+ax.set_ylabel("kappa (worst)"); ax.legend(fontsize=8)
 ax.axhline(1.0, color="red", linestyle="--", linewidth=1)
 ax.text(4.3, 1.02, "kappa=1 (biaya=gerak)", fontsize=8, color="red")
 

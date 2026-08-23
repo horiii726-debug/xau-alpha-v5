@@ -83,7 +83,8 @@ def trial(r_block: np.ndarray, ic_target: float, seed: int, cost_bps_worst: floa
     tier1_pass = all(tier1_checks)
 
     if not tier1_pass:
-        return {"tier1": False, "tier2": False, "tier3": False, "t_stat": t_stat, "sharpe": sharpe, "n": n}
+        return {"tier1": False, "tier2": False, "tier3": False, "t_stat": t_stat, "sharpe": sharpe, "n": n,
+                "checks_t1": tier1_checks, "checks_t2": None}
 
     # ---- tier 2: ROBUSTNESS ----
     # F_MC5 (di sini: gangguan ASUMSI BIAYA +/-20%, bukan hyperparameter formula)
@@ -118,6 +119,32 @@ def trial(r_block: np.ndarray, ic_target: float, seed: int, cost_bps_worst: floa
             "mean_net": mean_net, "checks_t1": tier1_checks, "checks_t2": tier2_checks}
 
 
+TIER1_NAMES = ["F_EXPECT (net>0)", "F_T15 (t>=1.5)", "F_B02 (beat random-matched)",
+               "F_B05 (beat coin-flip)", "F_BR (BR_eff>=100/thn)"]
+TIER2_NAMES = ["F_MC5 (stabil thd +/-20% biaya)", "F_SEED (stabil 10-seed)",
+               "F_WF (walkforward>=80%)", "F_THIRD (sepertiga akhir signifikan)",
+               "F_CPCV (CPCV path>=80%)", "F_MC2 (P(breach)<=5%)"]
+
+
+def per_filter_pass_rates(trials: list) -> dict:
+    """Proporsi trial yang LOLOS tiap filter individual -- untuk mendiagnosis
+    gerbang mana yang paling mematikan (bukan cuma vonis agregat tier)."""
+    t1_checks = [t["checks_t1"] for t in trials if t.get("checks_t1") is not None]
+    t1_rates = {}
+    if t1_checks:
+        arr = np.array(t1_checks)  # (n_trials, 5)
+        t1_rates = {name: float(arr[:, i].mean()) * 100 for i, name in enumerate(TIER1_NAMES)}
+
+    t2_checks = [t["checks_t2"] for t in trials if t.get("checks_t2") is not None]
+    t2_rates = {}
+    if t2_checks:
+        arr2 = np.array(t2_checks)  # (n_trials_reaching_tier2, 6)
+        t2_rates = {name: float(arr2[:, i].mean()) * 100 for i, name in enumerate(TIER2_NAMES)}
+
+    return {"tier1_filter_pass_pct": t1_rates, "tier2_filter_pass_pct": t2_rates,
+            "n_reached_tier2": len(t2_checks)}
+
+
 def run_l11(r_block: np.ndarray, ic_grid, n_seeds: int, cost_bps_worst: float,
             br_eff_per_year_full: float, mc2_rules: dict, seed0: int = 10000) -> dict:
     out = {}
@@ -126,6 +153,7 @@ def run_l11(r_block: np.ndarray, ic_grid, n_seeds: int, cost_bps_worst: float,
                   for s in range(n_seeds)]
         n_t1 = sum(t["tier1"] for t in trials)
         n_t2 = sum(t.get("tier2", False) for t in trials)
+        filter_diag = per_filter_pass_rates(trials)
 
         # tier 3 CONFIRM: t>=3.0 AND tier2 passed AND batch-level DSR>=0.95
         sharpes = np.array([t["sharpe"] for t in trials if t["tier1"]])
@@ -147,5 +175,6 @@ def run_l11(r_block: np.ndarray, ic_grid, n_seeds: int, cost_bps_worst: float,
             "transmit_chain_pct": 100 * n_t3 / n_seeds,
             "sharpe_std_empirical": sharpe_std,
             "n_pass_tier1": n_t1, "n_pass_tier2": n_t2, "n_pass_tier3": n_t3,
+            **filter_diag,
         }
     return out

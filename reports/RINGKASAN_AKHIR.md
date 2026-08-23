@@ -27,10 +27,18 @@ dijalankan. Ini jawaban sah (§07 E langkah 7).
    T_confirm **2.75 tahun** (ambang 11 tahun). Matematis pasti untuk K=2, dicatat
    SEBELUM angka dihitung.
 2. **GM-3 (F1): GAGAL, INDEPENDEN dari #1.** Transmitansi corong **0.0%** di semua
-   tahap & semua IC (0.03/0.05/0.08) untuk XAUUSD H240. Akar penyebab: biaya
-   round-trip worst-case terukur (28.22 bps) jauh melebihi gross edge yang bisa
-   ditangkap sinyal ber-IC realistis (bahkan IC=0.30 baru impas). Kappa H240
-   terukur (0.678) ~2x kappa acuan spec (0.327). Sudah dicek H1D juga -- serupa.
+   tahap & semua IC (0.03/0.05/0.08) untuk XAUUSD H240. **Metodologi biaya
+   dikoreksi** (lihat `F0_cost_regime.md`): daya statistik diukur di SELURUH
+   riwayat (5 thn), biaya diukur HANYA di 3 tahun terakhir (rezim relevan untuk
+   eksekusi sekarang) -- bukan dirata-ratakan lintas rezim harga berbeda jauh.
+   Biaya worst-case rezim-sekarang: **23.84 bps** (lebih rendah dari rata-rata
+   lama 28.22 bps, tapi masih jauh di atas gross edge realistis).
+   **Diagnosis per-filter (baru):** gerbang paling mematikan adalah **F_EXPECT
+   (expectancy net>0)**, lolos **0.0%** dari 150 seed di IC=0.05 -- sementara
+   F_B02/F_B05 (kalahkan null acak) lolos 95-99%, F_BR (frekuensi) lolos 100%.
+   **Kesimpulan bersih: ini murni soal ekonomi biaya-vs-edge, BUKAN gerbang
+   statistik yang rusak.** Gross edge @IC=0.30 (~28bps) baru impas terhadap
+   biaya rezim-sekarang (23.84bps) -- realistis 0.03-0.08 jauh di bawah itu.
 
 ## Angka-angka kunci
 

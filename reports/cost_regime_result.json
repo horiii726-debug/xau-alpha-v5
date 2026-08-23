@@ -1,0 +1,19 @@
+{
+  "symbol": "XAUUSD",
+  "years_present": [
+    2021,
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+  ],
+  "recent_years": [
+    2024,
+    2025,
+    2026
+  ],
+  "cost_full_bps": 28.222970587351483,
+  "cost_recent_bps": 23.838462693692296,
+  "br_eff_recent_per_year": 1881.6253894080996
+}
