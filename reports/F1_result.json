@@ -1,0 +1,38 @@
+{
+  "l10_passed": true,
+  "l11": {
+    "0.03": {
+      "n_seeds": 150,
+      "transmit_tier1_pct": 0.0,
+      "transmit_tier2_pct": 0.0,
+      "transmit_chain_pct": 0.0,
+      "sharpe_std_empirical": 0.3,
+      "n_pass_tier1": 0,
+      "n_pass_tier2": 0,
+      "n_pass_tier3": 0
+    },
+    "0.05": {
+      "n_seeds": 150,
+      "transmit_tier1_pct": 0.0,
+      "transmit_tier2_pct": 0.0,
+      "transmit_chain_pct": 0.0,
+      "sharpe_std_empirical": 0.3,
+      "n_pass_tier1": 0,
+      "n_pass_tier2": 0,
+      "n_pass_tier3": 0
+    },
+    "0.08": {
+      "n_seeds": 150,
+      "transmit_tier1_pct": 0.0,
+      "transmit_tier2_pct": 0.0,
+      "transmit_chain_pct": 0.0,
+      "sharpe_std_empirical": 0.3,
+      "n_pass_tier1": 0,
+      "n_pass_tier2": 0,
+      "n_pass_tier3": 0
+    }
+  },
+  "gm3_pass": false,
+  "cost_worst_bps_h240": 28.222970587351483,
+  "br_eff_per_year": 1880.2869863013698
+}

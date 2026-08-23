@@ -1,15 +1,15 @@
 # F0 -- Daya Statistik & Verdict Gerbang Mati (GM-1 s/d GM-5)
 
-**Riwayat bersama terukur (irisan XAUUSD & XAGUSD): 2021-08-22 s/d 2025-06-25 = 3.84 tahun.**
-**T_confirm terukur (55% partisi): 2.11 tahun.**
+**Riwayat bersama terukur (irisan XAUUSD & XAGUSD): 2021-08-22 s/d 2026-08-22 = 5.00 tahun.**
+**T_confirm terukur (55% partisi): 2.75 tahun.**
 
 ## GM-1 -- K_eff >= 3.0
 
-K_eff terukur = **1.6562**. Ambang = 3.0. **GAGAL -- STOP**
+K_eff terukur = **1.6281**. Ambang = 3.0. **GAGAL -- STOP**
 
 ## GM-1b -- K_eff >= 4.0 DAN T_confirm >= 11 tahun (syarat gabungan, §01 B4b)
 
-K_eff >= 4.0: GAGAL (1.6562). T_confirm >= 11 thn: GAGAL (2.11 thn). **GAGAL -- STOP**
+K_eff >= 4.0: GAGAL (1.6281). T_confirm >= 11 thn: GAGAL (2.75 thn). **GAGAL -- STOP**
 
 ## GM-2, GM-4, GM-5, sd_SR pilot, skew/kurt
 

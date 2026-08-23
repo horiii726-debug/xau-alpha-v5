@@ -1,4 +1,9 @@
-# STOP REPORT -- F0, XAU ALPHA RESEARCH v6
+# STOP REPORT -- F0 & F1, XAU ALPHA RESEARCH v6
+
+> **UPDATE setelah F1 dijalankan:** F1 (uji L11, transmitansi corong) GAGAL secara
+> **independen** dari masalah panel F0 di bawah. Lihat "Temuan F1" di bagian bawah
+> dokumen ini -- ini bukan cuma soal K_eff, ada kendala biaya/horizon terpisah yang
+> juga harus diatasi.
 
 **Status: BERHENTI di F0.** Gerbang mati GM-1 dan GM-1b sama-sama gagal. Ini bukan
 kegagalan alat ukur (bandingkan §07 E langkah 0, protokol L11) -- ini konsekuensi
@@ -9,8 +14,12 @@ dijalankan (lihat `PREREGISTRATION.md`).
 
 | Gerbang | Ambang | Terukur | Vonis |
 |---|---|---:|---|
-| **GM-1** | K_eff >= 3.0 | **1.6562** | **GAGAL** |
-| **GM-1b** (gabungan) | K_eff >= 4.0 **dan** T_confirm >= 11 thn | K_eff 1.6562, T_confirm 2.11 thn | **GAGAL** (dua-duanya) |
+| **GM-1** | K_eff >= 3.0 | **1.6281** | **GAGAL** |
+| **GM-1b** (gabungan) | K_eff >= 4.0 **dan** T_confirm >= 11 thn | K_eff 1.6281, T_confirm 2.75 thn | **GAGAL** (dua-duanya) |
+| **GM-3** (F1, L11) | transmitansi rantai penuh @IC0.05 >= 50% | **0.0%** | **GAGAL** (independen dari GM-1) |
+
+Angka di atas FINAL (data XAUUSD & XAGUSD 100% lengkap 2021-08-22 s/d 2026-08-22,
+1827/1827 hari, nol gap, nol duplikat).
 
 Detail perhitungan: `reports/F0_universe.md`, `reports/F0_power.md`.
 
@@ -22,10 +31,39 @@ Detail perhitungan: `reports/F0_universe.md`, `reports/F0_power.md`.
   yang bisa membuat panel 2-instrumen lolos GM-1 (>=3.0), apalagi GM-1b (>=4.0).**
   Ini diketahui sebelum data dilihat (dicatat di PREREGISTRATION.md) dan angka
   terukur di atas hanya mengonfirmasinya.
-- **T_confirm = 2.11 tahun** dari riwayat bersama terukur XAUUSD-XAGUSD (2021-08-22
-  s/d 2025-06-25 saat run ini dieksekusi, download masih berjalan sampai
-  2026-08-22 -- akan diperbarui, tapi 55% dari ~5 tahun tidak akan pernah mendekati
-  11 tahun berapapun sisa datanya).
+- **T_confirm = 2.75 tahun** dari riwayat bersama FINAL XAUUSD-XAGUSD (2021-08-22
+  s/d 2026-08-22, data 100% lengkap). 55% dari 5 tahun tidak akan pernah mendekati
+  11 tahun -- ini bukan lagi angka sementara.
+
+## Temuan F1 -- GM-3 gagal, INDEPEN dari masalah panel
+
+F1 (uji L11 -- transmitansi corong) dijalankan pada XAUUSD sendiri (tidak butuh
+panel lengkap, sesuai instruksi). Sinyal sintetis ber-IC terkontrol (0.03/0.05/0.08,
+150 seed per IC) disuntikkan ke harga XAUUSD nyata, horizon H240, dijalankan lewat
+corong 3-tingkat v6. **Transmitansi 0.0% di SEMUA tahap, semua IC.**
+
+**Akar penyebab (bukan bug pengukuran, sudah didiagnosis penuh di
+`F0_cost_model.md` & `F1_gate_power.md`):** biaya round-trip worst-case XAUUSD
+terukur nyata (28.22 bps, dari spread p90 Dukascopy asli) jauh lebih besar
+daripada gross edge yang bisa ditangkap sinyal ber-IC realistis pada frekuensi
+~220 trade/tahun -- bahkan pada IC=0.30 (6x di atas rentang realistis 0.02-0.05),
+gross edge (~28 bps) baru IMPAS, belum lolos gerbang manapun. Sudah dicek di H1D
+juga (kappa lebih rendah, 0.277) -- hasil serupa, dan H1D sendiri `PARKED` karena
+data swap belum ada.
+
+**Kappa H240 terukur (0.678) hampir 2x kappa acuan di dokumen spec asli (0.327)**
+-- kemungkinan karena spread p90 Dukascopy real yang saya ukur lebih lebar
+daripada asumsi perencanaan di dokumen sumber.
+
+**Catatan kejujuran soal keterbatasan uji ini:** L11 di sini memakai eksposur
+horizon-tetap tanpa SL/TP dioptimalkan (divisi X belum diuji). Kandidat nyata
+dengan barrier optimal mungkin menangkap lebih banyak dari IC yang sama -- jadi
+0% di sini kemungkinan pesimistis dibanding kandidat nyata, tapi tidak bisa
+dipastikan tanpa F2/F5 dijalankan.
+
+**Implikasi:** memperluas panel (mengatasi GM-1/GM-1b) TIDAK otomatis mengatasi
+GM-3 -- ini kendala kedua yang independen, kemungkinan butuh horizon berbeda,
+sesi berbiaya-rendah, atau exit yang dioptimalkan (bukan cuma panel lebih besar).
 
 ## Kenapa langkah-langkah lain di F0 (sd_SR pilot, skew/kurt, GM-2/4/5) dilewati
 
@@ -47,20 +85,18 @@ dan jadi fondasi kalau panel diperluas.
 ## 3 opsi konkret untuk melewati gerbang ini
 
 **Opsi A -- Perluas panel ke K>=4-5 instrumen berkorelasi rendah (disarankan per
-spec §01 B4b).**
-Spec v6 sendiri menyatakan panel 8-instrumen berkorelasi rendah (rho_PnL <= 0.10)
-dengan riwayat >=20 tahun adalah **satu-satunya** konfigurasi yang terukur lolos
-GM-3 (transmitansi corong) di dokumen sumber. Butuh: (1) verifikasi kode Dukascopy
-& point-value yang benar untuk EURUSD (sudah ada di `download_candles.py`), USDJPY,
-US100, US30, USOIL (LIGHTCMDUSD sudah ada), NATGAS -- **saya sengaja tidak
-menebak kode/point-value instrumen yang belum terverifikasi** (melanggar §D1/D4
-kalau salah skala harga, datanya jadi silently corrupt); (2) unduh riwayat
-sepanjang mungkin (Dukascopy umumnya punya FX major sejak awal 2000-an, indeks
-CFD & energi biasanya lebih pendek -- perlu diaudit per instrumen seperti XAU/XAG
-di atas); (3) jalankan ulang `data/run_f0_v6.py` dengan panel yang diperluas.
-Estimasi kerja: menit-jam untuk verifikasi kode+unduh per instrumen tambahan,
-tergantung rate-limit Dukascopy (~1 req/detik, backoff otomatis -- lihat log
-unduhan XAU/XAG barusan yang kadang kena 503 dan perlu cooldown).
+spec §01 B4b). SEDANG BERJALAN.**
+`scripts/download_dukascopy.py` sudah dijalankan (nohup, resumable): 5/8 instrumen
+ter-verifikasi lewat probe harga nyata (XAUUSD, XAGUSD, EURUSD, USOIL, **USDJPY**)
+-- US100/US30/NATGAS **UNRESOLVED** (kode Dukascopy yang dicoba semua 404, sengaja
+tidak ditebak lebih jauh). Tanggal mulai NYATA yang ditemukan lewat binary search:
+**XAUUSD 1999-09-01, XAGUSD 1999-01-01, EURUSD & USDJPY 2003-05-04, USOIL
+2011-09-23** -- jauh lebih awal dari dugaan "2003" di dokumen spec.
+**Realitas waktu: unduhan 27 tahun x 5 instrumen pada rate-limit Dukascopy
+(~0.2-0.4 hari-data/detik, dengan backoff 503 berkala) akan makan ~1-2 hari,
+bukan menit-jam** -- estimasi di paragraf ini sebelumnya salah, dikoreksi di sini.
+Berjalan di background, F0 akan di-rerun otomatis setelah selesai. **Tapi ingat
+temuan F1 di atas: memperluas panel TIDAK otomatis mengatasi GM-3.**
 
 **Opsi B -- Terima bahwa panel XAU-XAG (K=2) tidak bisa menjalankan protokol v6
 seperti dirancang, dan alihkan ke strategi berbeda: pair-trading/spread-trading

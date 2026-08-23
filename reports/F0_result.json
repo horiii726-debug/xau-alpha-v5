@@ -16,32 +16,32 @@
     },
     {
       "symbol": "XAGUSD",
-      "n_day_files": 1404,
-      "n_empty_days": 200,
+      "n_day_files": 1827,
+      "n_empty_days": 261,
       "first_date": "2021-08-22",
-      "last_date": "2025-06-25",
-      "total_m1_rows": 1733760,
+      "last_date": "2026-08-22",
+      "total_m1_rows": 2255040,
       "duplicate_ts_rows": 0,
       "missing_weekdays_in_range": 0,
       "missing_weekday_sample": [],
       "outlier_days_gt5pct_1min_move": [],
       "n_outlier_days": 0,
-      "snapshot_hash_sha256_12": "0e16e5eb039c61db"
+      "snapshot_hash_sha256_12": "0c5806f52900f3b9"
     }
   ],
   "universe": {
-    "k_eff_eigen": 1.6562296912296277,
-    "k_eff_equicorr": 1.3740135677526761,
-    "rho": 0.4555897022699575,
-    "n_obs": 332051,
+    "k_eff_eigen": 1.6281183707159055,
+    "k_eff_equicorr": 1.3532490200209222,
+    "rho": 0.4779245877222793,
+    "n_obs": 450995,
     "K": 2
   },
   "power": {
-    "t_confirm_years": 2.1126625598904862,
+    "t_confirm_years": 2.7496235455167697,
     "gm1_pass": "False",
     "gm1b_pass": "False",
     "common_start": "2021-08-22",
-    "common_end": "2025-06-25",
-    "total_years": 3.8412046543463383
+    "common_end": "2026-08-22",
+    "total_years": 4.999315537303217
   }
 }

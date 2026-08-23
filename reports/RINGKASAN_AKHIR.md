@@ -1,60 +1,65 @@
 # RINGKASAN AKHIR -- XAU ALPHA RESEARCH v6
 
-**Status: BERHENTI di F0.** Nol kandidat dijalankan. Ini jawaban sah (§07 E langkah 7).
+**Status: BERHENTI di F0 DAN F1 (dua gerbang mati independen).** Nol kandidat
+dijalankan. Ini jawaban sah (§07 E langkah 7).
 
 ## Apa yang lolos
 
 - **6 keputusan OVERRIDE V6** dicatat SETUJU dan di-hash di `PREREGISTRATION.md` /
   `config/v6.yaml.sha256`.
-- **Audit data**: XAUUSD (2021-08-22 s/d 2026-08-22, 1827 file hari) dan XAGUSD
-  (2021-08-22 s/d berjalan) -- **nol duplikat timestamp, nol hari kerja hilang,
-  nol hari dengan lompatan >5%/menit** di kedua instrumen. Data Dukascopy M1
-  bid/ask bersih untuk apa yang diaudit.
-- **Model biaya v6** (koreksi beta `sigma_latensi`, bukan `sigma_bar`) dihitung
-  penuh dengan spread NYATA dari tick Dukascopy, komisi terverifikasi resmi
-  (FTMO 0.140bps, FundedNext 0.160bps per sisi metals) -- lihat `F0_cost_model.md`.
-- **K_eff dihitung dari korelasi PnL NYATA** (bukan diasumsikan): metode eigenvalue,
-  panel yang tersedia.
+- **Audit data FINAL**: XAUUSD & XAGUSD, 2021-08-22 s/d 2026-08-22, **1827/1827
+  hari lengkap kedua-duanya** -- nol duplikat timestamp, nol hari kerja hilang,
+  nol lompatan >5%/menit.
+- **Model biaya v6** (koreksi beta `sigma_latensi`) dihitung penuh dari spread
+  NYATA Dukascopy + komisi resmi FTMO/FundedNext -- `F0_cost_model.md`.
+- **K_eff dari korelasi PnL NYATA** (eigenvalue method) -- `F0_universe.md`.
+- **L10 (uji kebocoran) LOLOS** -- pytest 4/4 hijau (`F1_leak_test.md`), alat ukur
+  validasi sendiri sudah terbukti benar.
+- **L11 (uji daya gerbang) dijalankan penuh** -- 450 trial (3 IC x 150 seed) sinyal
+  sintetis pada harga XAUUSD nyata, plus cek tambahan H1D -- `F1_gate_power.md`.
+- **Unduhan panel 8-instrumen dimulai** (`scripts/download_dukascopy.py`, berjalan
+  di background) -- 5/8 ter-verifikasi, tanggal mulai nyata ditemukan lewat binary
+  search (XAUUSD kembali sampai **1999**, bukan 2003 seperti dugaan spec).
 
 ## Apa yang gagal
 
-- **GM-1 (K_eff >= 3.0): GAGAL.** K_eff terukur **1.6562** (panel K=2: XAUUSD,
-  XAGUSD -- 6 dari 8 instrumen spec v6 TIDAK diunduh, lihat `PREREGISTRATION.md`).
-- **GM-1b (syarat gabungan): GAGAL.** K_eff 1.6562 < 4.0, T_confirm **2.11 tahun**
-  < 11 tahun.
-- Kedua kegagalan ini **matematis pasti** untuk K=2 (K_eff eigenvalue terikat ke
-  rentang (1,2] untuk semua kemungkinan korelasi) -- dicatat di PREREGISTRATION.md
-  **sebelum** angka dihitung, supaya tidak disalahartikan sebagai "kejutan" atau
-  "gerbang rusak" (bandingkan protokol L11 §07E langkah 0 -- ini BUKAN itu; alat
-  ukurnya benar, sampelnya yang tidak cukup, secara struktural).
-- GM-2 (sd_SR/N_maks), GM-4, GM-5, pilot 24-trial, dan seluruh F1-F11 **sengaja
-  tidak dijalankan** -- menjalankannya berarti menghitung anggaran untuk registri
-  yang sudah pasti gagal DSR, pola yang menyebabkan v1-v5 gagal lima kali.
+1. **GM-1 & GM-1b (F0): GAGAL.** K_eff terukur **1.6281** (panel K=2 -- ambang 3.0/4.0).
+   T_confirm **2.75 tahun** (ambang 11 tahun). Matematis pasti untuk K=2, dicatat
+   SEBELUM angka dihitung.
+2. **GM-3 (F1): GAGAL, INDEPENDEN dari #1.** Transmitansi corong **0.0%** di semua
+   tahap & semua IC (0.03/0.05/0.08) untuk XAUUSD H240. Akar penyebab: biaya
+   round-trip worst-case terukur (28.22 bps) jauh melebihi gross edge yang bisa
+   ditangkap sinyal ber-IC realistis (bahkan IC=0.30 baru impas). Kappa H240
+   terukur (0.678) ~2x kappa acuan spec (0.327). Sudah dicek H1D juga -- serupa.
 
 ## Angka-angka kunci
 
 | Angka | Nilai | Ambang | Vonis |
 |---|---:|---:|---|
-| K_eff (eigenvalue, K=2) | 1.6562 | >=3.0 (GM-1) / >=4.0 (GM-1b) | GAGAL |
-| rho_PnL baseline XAU-XAG | 0.4556 | <=0.10 (target spec §01 B4b) | jauh di atas target |
-| T_confirm (55% dari riwayat bersama) | 2.11 thn | >=11 thn (GM-1b) | GAGAL |
-| Riwayat bersama XAU-XAG | 3.84 thn (saat F0 dijalankan) | target 20 thn | jauh di bawah |
-| Biaya round-trip worst, XAUUSD | lihat F0_cost_model.md | -- | terukur, belum verified (swap/markup TIDAK_KETEMU) |
-| P(breach 6% DD), risk 0.25%, Sharpe ASUMSI 1.15 | ~3.4% (simulasi 10rb jalur) | <=5% (MC2) | LOLOS -- tapi ini ASUMSI Sharpe, bukan kandidat nyata |
+| K_eff (eigenvalue, K=2, FINAL) | 1.6281 | >=3.0 (GM-1) / >=4.0 (GM-1b) | GAGAL |
+| rho_PnL baseline XAU-XAG | 0.4779 | <=0.10 (target spec) | jauh di atas target |
+| T_confirm (55% riwayat bersama, FINAL) | 2.75 thn | >=11 thn (GM-1b) | GAGAL |
+| Transmitansi L11 rantai penuh @IC0.05 | 0.0% | >=50% (GM-3) | GAGAL |
+| Gross edge @IC0.30 vs biaya worst H240 | ~28 bps vs 28.22 bps | -- | baru impas, bukan lolos |
+| Kappa H240 XAUUSD (worst) | 0.678 | acuan spec 0.327 | ~2x lebih berat |
+| P(breach 6% DD), risk 0.25%, Sharpe ASUMSI 1.15 | ~3.4% (10rb jalur simulasi) | <=5% (MC2) | LOLOS -- tapi ASUMSI Sharpe, bukan kandidat nyata |
 
 ## Rekomendasi jujur
 
 **Jangan pakai uang asli berdasarkan run ini -- belum ada satupun kandidat yang
-diuji.** Ini bukan "strategi yang gagal", ini "proyek yang belum sampai ke tahap
-menguji strategi apapun", karena fondasi statistiknya (jumlah instrumen independen)
-belum cukup untuk menopang gerbang yang dirancang.
+diuji.** ADA DUA masalah struktural terpisah, bukan satu:
 
-Tiga jalan ke depan ada di `reports/STOP_REPORT.md` (opsi A/B/C). Yang paling
-konsisten dengan tujuan riset multi-instrumen v6: **perluas panel ke >=4-5
-instrumen dengan korelasi PnL rendah** -- tapi ini butuh verifikasi kode Dukascopy
-dan point-value instrumen yang belum ada di codebase (USDJPY, US100, US30,
-NATGAS), yang sengaja TIDAK ditebak di run ini karena risiko silently merusak
-data harga.
+1. **Panel terlalu kecil** (K=2 vs target 8) -- sedang diatasi, unduhan berjalan
+   (realita: ~1-2 hari lagi untuk 5 instrumen x hingga 27 tahun riwayat).
+2. **Biaya H240 XAUUSD terlalu besar relatif edge realistis** -- memperluas panel
+   TIDAK otomatis mengatasi ini. Perlu diuji ulang di horizon lain, sesi
+   berbiaya-rendah, atau dengan exit yang dioptimalkan (divisi X, belum diuji)
+   setelah panel selesai diunduh.
 
-Dashboard lengkap (10 panel, termasuk yang ditandai eksplisit "TIDAK TERCAPAI"
-untuk tahap yang tidak pernah dijalankan) ada di `reports/dashboard.png`.
+**Catatan kejujuran soal L11:** hasil 0% memakai eksposur horizon-tetap tanpa
+SL/TP dioptimalkan -- kandidat nyata dengan divisi X mungkin menangkap lebih
+banyak dari IC yang sama. Tidak bisa dipastikan tanpa F2/F5 dijalankan, jadi
+diakui sebagai batasan uji, bukan alasan mengabaikan hasilnya.
+
+Detail lengkap & 3 opsi jalan ke depan: `reports/STOP_REPORT.md`.
+Dashboard 10-panel (real data + panel "TIDAK TERCAPAI" yang jujur): `reports/dashboard.png`.

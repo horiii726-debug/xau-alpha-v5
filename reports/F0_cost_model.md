@@ -29,25 +29,25 @@ Komisi metals TERVERIFIKASI dari halaman resmi (03_DATA_DAN_BIAYA.md §B1): FTMO
 
 ## XAGUSD
 
-- Spread terukur (M5, dari tick bid/ask real): p50=12.872 bps, p75=13.987 bps, p90=17.197 bps, p99=44.100 bps
-- sigma M5 empiris: 9.617 bps/bar -> proxy sigma M1 (skala akar-waktu): 4.301 bps
-- proxy sigma_latensi (skala akar-waktu dari M1, BUKAN tick langsung): 1s=0.555bps, 3s=0.962bps, 10s=1.756bps
+- Spread terukur (M5, dari tick bid/ask real): p50=12.498 bps, p75=13.784 bps, p90=18.603 bps, p99=60.390 bps
+- sigma M5 empiris: 12.635 bps/bar -> proxy sigma M1 (skala akar-waktu): 5.650 bps
+- proxy sigma_latensi (skala akar-waktu dari M1, BUKAN tick langsung): 1s=0.729bps, 3s=1.263bps, 10s=2.307bps
 
 | skenario | spread bps | slip bps (v6, sigma_latensi) | komisi RT bps | **total RT bps** |
 |---|---:|---:|---:|---:|
-| best | 12.872 | 6.436 | 0.320 | **32.499** |
-| base | 13.987 | 14.227 | 0.320 | **42.520** |
-| worst | 17.197 | 26.673 | 0.320 | **91.921** |
+| best | 12.498 | 6.249 | 0.320 | **31.566** |
+| base | 13.784 | 14.100 | 0.320 | **41.989** |
+| worst | 18.603 | 29.058 | 0.320 | **99.715** |
 
 **Kappa (biaya_worst_bps / volatilitas_horizon_bps), horizon via penskalaan akar-waktu dari sigma M5 terukur:**
 
 | horizon | menit | sigma horizon (bps) | kappa @worst |
 |---|---:|---:|---:|
-| H15 | 15 | 16.66 | 5.518 |
-| H60 | 60 | 33.31 | 2.759 |
-| H120 | 120 | 47.11 | 1.951 |
-| H240 | 240 | 66.63 | 1.380 |
-| H1D | 1440 | 163.20 | 0.563 |
+| H15 | 15 | 21.88 | 4.557 |
+| H60 | 60 | 43.77 | 2.278 |
+| H120 | 120 | 61.90 | 1.611 |
+| H240 | 240 | 87.54 | 1.139 |
+| H1D | 1440 | 214.42 | 0.465 |
 
 **Catatan:** kappa di atas memakai penskalaan akar-waktu dari sigma bar (proxy perencanaan), BUKAN durasi hit-barrier NYATA (§03 C4) -- itu butuh triple-barrier labeling penuh yang belum dijalankan (F0 tidak menjalankan kandidat). Ditandai `KAPPA_PLANNING_PROXY`, wajib dihitung ulang dari durasi barrier real sebelum F2b.
 
