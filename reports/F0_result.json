@@ -1,0 +1,47 @@
+{
+  "audits": [
+    {
+      "symbol": "XAUUSD",
+      "n_day_files": 1827,
+      "n_empty_days": 261,
+      "first_date": "2021-08-22",
+      "last_date": "2026-08-22",
+      "total_m1_rows": 2255040,
+      "duplicate_ts_rows": 0,
+      "missing_weekdays_in_range": 0,
+      "missing_weekday_sample": [],
+      "outlier_days_gt5pct_1min_move": [],
+      "n_outlier_days": 0,
+      "snapshot_hash_sha256_12": "11478e492a3f75ea"
+    },
+    {
+      "symbol": "XAGUSD",
+      "n_day_files": 1404,
+      "n_empty_days": 200,
+      "first_date": "2021-08-22",
+      "last_date": "2025-06-25",
+      "total_m1_rows": 1733760,
+      "duplicate_ts_rows": 0,
+      "missing_weekdays_in_range": 0,
+      "missing_weekday_sample": [],
+      "outlier_days_gt5pct_1min_move": [],
+      "n_outlier_days": 0,
+      "snapshot_hash_sha256_12": "0e16e5eb039c61db"
+    }
+  ],
+  "universe": {
+    "k_eff_eigen": 1.6562296912296277,
+    "k_eff_equicorr": 1.3740135677526761,
+    "rho": 0.4555897022699575,
+    "n_obs": 332051,
+    "K": 2
+  },
+  "power": {
+    "t_confirm_years": 2.1126625598904862,
+    "gm1_pass": "False",
+    "gm1b_pass": "False",
+    "common_start": "2021-08-22",
+    "common_end": "2025-06-25",
+    "total_years": 3.8412046543463383
+  }
+}

@@ -1,0 +1,67 @@
+# XAU ALPHA RESEARCH v6 — config terkunci, F0
+# Locked: 2026-08-23, sebelum kandidat pertama dijalankan.
+
+meta:
+  version: v6
+  locked_on: "2026-08-23"
+  preregistration: PREREGISTRATION.md
+  config_sha256: null   # diisi setelah hash dihitung, lihat config/v6.yaml.sha256
+
+overrides_v6_approved:
+  - corong_bertingkat
+  - f2_pengukuran_bukan_stop
+  - koreksi_beta_slippage_sigma_latensi
+  - ledger_dipisah_arah_estimasi
+  - sd_sr_diukur_di_f0
+  - syarat_gabungan_keff4_tconfirm11
+
+universe:
+  panel_diminta_spec: [XAUUSD, XAGUSD, EURUSD, USDJPY, US100, US30, USOIL, NATGAS]
+  panel_data_tersedia: [XAUUSD, XAGUSD]     # HANYA ini yang diunduh & diverifikasi
+  panel_tidak_tersedia: [EURUSD, USDJPY, US100, US30, USOIL, NATGAS]
+  sumber: dukascopy
+  jenis_data: M1_bid_ask_candle             # bukan tick mentah -- lihat F0_data_audit.md
+  rentang_diminta: "2003-01 s/d sekarang"
+  rentang_tersedia: "2021-08-22 s/d berjalan (~5 tahun)"
+
+partitions:
+  scheme: chronological_three_way
+  screen_fraction: 0.25
+  confirm_fraction: 0.55
+  holdout_fraction: 0.20
+  embargo_days_between: 10
+
+cost_model:
+  unit: bps
+  scenarios:
+    best:  {spread_percentile: 50, slippage_alpha: 0.5, slippage_beta: 0.00, penalty: 1.0}
+    base:  {spread_percentile: 75, slippage_alpha: 1.0, slippage_beta: 0.25, penalty: 1.0}
+    worst: {spread_percentile: 90, slippage_alpha: 1.5, slippage_beta: 0.50, penalty: 1.5}
+  gate_scenario: worst
+  slippage_formula_v6: "slippage_bps = alpha * spread_bps + beta * sigma_LATENSI_bps"  # override #3
+  latensi_grid_detik: [1, 3, 10]
+  komisi_metals_bps_per_sisi:
+    ftmo: 0.140
+    fundednext: 0.160
+  komisi_side_assumption: per_sisi   # ambigu resmi, dipakai konservatif (2x per_sisi = round trip)
+
+account_rules_gate:
+  nama: "FundedNext Stellar 1-Step (TERKETAT)"
+  max_daily_loss_pct: 3.0
+  max_total_drawdown_pct: 6.0
+  drawdown_type: statis
+  profit_target_pct: 10.0
+
+gerbang_mati_f0:
+  GM1_Keff_min: 3.0
+  GM1b_Keff_gabungan_min: 4.0
+  GM1b_Tconfirm_gabungan_min_tahun: 11.0
+  GM2_Nmaks_lantai: 23
+  GM4_t_pooled_confirm_min: 3.0
+  GM5_p_breach_max_pct: 5.0
+
+statistics:
+  t_stat_hurdle_screening: 1.5
+  t_stat_hurdle_robustness: 2.0
+  t_stat_hurdle_confirm: 3.0
+  dsr_threshold: 0.95

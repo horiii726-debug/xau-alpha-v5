@@ -145,7 +145,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--start", default="2021-08-22")
     ap.add_argument("--end", default="2026-08-22")
+    ap.add_argument("--symbols", default=",".join(SYMBOLS.keys()),
+                     help="comma-separated subset of symbols to download")
     args = ap.parse_args()
+
+    requested = [s.strip() for s in args.symbols.split(",") if s.strip()]
+    unknown = [s for s in requested if s not in SYMBOLS]
+    if unknown:
+        raise SystemExit(f"unknown symbols: {unknown}. known: {list(SYMBOLS.keys())}")
+    active_symbols = {s: SYMBOLS[s] for s in requested}
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S", stream=sys.stdout)
     log = logging.getLogger("download_candles")
@@ -154,7 +162,7 @@ def main():
     end = date.fromisoformat(args.end)
 
     day_tasks = []
-    for symbol, point in SYMBOLS.items():
+    for symbol, point in active_symbols.items():
         out_dir = RAW_DIR / symbol
         out_dir.mkdir(parents=True, exist_ok=True)
         for day in daterange(start, end):
