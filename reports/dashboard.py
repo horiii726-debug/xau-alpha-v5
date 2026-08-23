@@ -178,16 +178,16 @@ for offset, symbol, color in [(-width/2, "XAUUSD", "#b8860b"), (width/2, "XAGUSD
     sigma_m5 = bars_df["mid_ret"].std() * 1e4
     sb = bars_df["spread_bps"].dropna()
     sb = sb[(sb > 0) & (sb < 1000)]
-    p90 = sb.quantile(0.90)
+    p50 = sb.quantile(0.50)  # KOREKSI: bersyarat Q10 (spread<=p50), bukan p90 -- lihat F1_gate_power.md
     komisi_rt = 2 * (0.160 if symbol == "XAGUSD" else 0.140)
     sigma_m1 = sigma_m5 / np.sqrt(5.0)
     sigma_lat10 = sigma_m1 * np.sqrt(10 / 60.0)
-    slip = 1.5 * p90 + 0.5 * sigma_lat10
-    total_worst = (2 * p90 + slip) * 1.5 + komisi_rt
+    slip = 1.5 * p50 + 0.5 * sigma_lat10
+    total_worst = (2 * p50 + slip) * 1.5 + komisi_rt
     kappas = [total_worst / (sigma_m5 * np.sqrt(m / 5.0)) for _, m in horizons]
     ax.bar(x + offset, kappas, width, label=f"{symbol} ({recent[0]}-{recent[-1]})", color=color)
 ax.set_xticks(x); ax.set_xticklabels([h[0] for h in horizons])
-ax.set_title("9. Kappa per horizon -- REZIM-SEKARANG (3thn terakhir, bukan seluruh riwayat)", fontsize=10, fontweight="bold")
+ax.set_title("9. Kappa per horizon -- REZIM-SEKARANG, biaya bersyarat Q10 (p50)", fontsize=10, fontweight="bold")
 ax.set_ylabel("kappa (worst)"); ax.legend(fontsize=8)
 ax.axhline(1.0, color="red", linestyle="--", linewidth=1)
 ax.text(4.3, 1.02, "kappa=1 (biaya=gerak)", fontsize=8, color="red")

@@ -24,10 +24,24 @@ REPORTS = Path("/workspace/xau-alpha-v5/reports")
 RECENT_YEARS_N = 3
 
 
-def cost_worst_bps(spread_p90: float, sigma_lat10_bps: float) -> float:
-    slip = 1.5 * spread_p90 + 0.5 * sigma_lat10_bps
+def cost_worst_bps(spread_p50: float, sigma_lat10_bps: float) -> float:
+    """KOREKSI: skenario biaya WAJIB bersyarat pada Q10_SPREAD_PERCENTILE_GATE.
+    Q10 hanya izinkan entry saat spread <= p50 -- jadi distribusi biaya yang
+    relevan untuk expectancy adalah spread YANG LOLOS gerbang (dibatasi p50),
+    BUKAN p90 seluruh sampel (yang mencakup periode yang Q10 sendiri akan
+    tolak). Menghitung p90 sambil punya gerbang yang melarang p90 = menghukum
+    dua kali. Skenario worst sekarang: spread=p50, alpha=1.5, penalty=1.5
+    (alpha/penalty TETAP ketat -- yang diperbaiki cuma spread mana yang jadi
+    basis, bukan konservatisme keseluruhan)."""
+    slip = 1.5 * spread_p50 + 0.5 * sigma_lat10_bps
     komisi_rt = 2 * 0.140
-    return (2 * spread_p90 + slip) * 1.5 + komisi_rt
+    return (2 * spread_p50 + slip) * 1.5 + komisi_rt
+
+
+def cost_best_bps(spread_p25: float, sigma_lat1_bps: float) -> float:
+    slip = 0.5 * spread_p25 + 0.0 * sigma_lat1_bps
+    komisi_rt = 2 * 0.140
+    return (2 * spread_p25 + slip) * 1.0 + komisi_rt
 
 
 def yearly_kappa_table(symbol: str) -> pd.DataFrame:
@@ -42,45 +56,46 @@ def yearly_kappa_table(symbol: str) -> pd.DataFrame:
         sb = sb[(sb > 0) & (sb < 1000)]
         if len(sb) < 100:
             continue
-        p50, p90 = sb.quantile([0.50, 0.90])
+        p25, p50 = sb.quantile([0.25, 0.50])
         sigma_m5 = g["mid_ret"].std() * 1e4
         sigma_m1 = sigma_m5 / np.sqrt(5.0)
         sigma_lat10 = sigma_m1 * np.sqrt(10 / 60.0)
-        cost_worst = cost_worst_bps(p90, sigma_lat10)
+        cost_worst = cost_worst_bps(p50, sigma_lat10)
         sigma_h240 = sigma_m5 * np.sqrt(240 / 5.0)
         kappa_h240 = cost_worst / sigma_h240
         mean_price = g["mid_close"].mean()
-        rows.append({"year": year, "mean_price": mean_price, "spread_p50_bps": p50,
-                      "spread_p90_bps": p90, "sigma_m5_bps": sigma_m5,
+        rows.append({"year": year, "mean_price": mean_price, "spread_p25_bps": p25,
+                      "spread_p50_bps": p50, "sigma_m5_bps": sigma_m5,
                       "cost_worst_bps": cost_worst, "sigma_h240_bps": sigma_h240,
                       "kappa_h240_worst": kappa_h240, "n_bars": len(g)})
     return pd.DataFrame(rows)
 
 
 def regime_cost(symbol: str, years: list[int]) -> float:
+    """Biaya 'worst' bersyarat Q10 (spread<=p50) -- lihat cost_worst_bps()."""
     m5 = pd.read_parquet(BAR_DIR / f"{symbol}_M5.parquet")
     m5["bar_time"] = pd.to_datetime(m5["bar_time"], utc=True)
     sub = m5[m5["bar_time"].dt.year.isin(years)]
     sb = sub["spread_bps"].dropna()
     sb = sb[(sb > 0) & (sb < 1000)]
-    p90 = sb.quantile(0.90)
+    p50 = sb.quantile(0.50)
     sub = sub.copy()
     sub["mid_ret"] = sub["mid_close"].pct_change()
     sigma_m5 = sub["mid_ret"].std() * 1e4
     sigma_m1 = sigma_m5 / np.sqrt(5.0)
     sigma_lat10 = sigma_m1 * np.sqrt(10 / 60.0)
-    return cost_worst_bps(p90, sigma_lat10)
+    return cost_worst_bps(p50, sigma_lat10)
 
 
-def gross_edge_at_ic(r_block: np.ndarray, ic: float, n_seeds: int, target_trades_per_year: float,
-                      br_eff_per_year_full: float) -> float:
+def gross_edge_at_ic(r_block: np.ndarray, ic: float, n_seeds: int, tau: float,
+                      br_eff_per_year_full: float = None) -> float:
+    """tau: ambang |signal| EKSPLISIT (bukan diturunkan dari target frekuensi
+    trade) -- selektivitas nyata, lihat l11_gate_power.trial()."""
     grosses = []
     for s in range(n_seeds):
         rng = np.random.default_rng(50000 + s)
         signal = synthetic_signal(r_block, ic, rng)
-        tr = min(1.0, target_trades_per_year / br_eff_per_year_full)
-        th = np.quantile(np.abs(signal), 1 - tr)
-        tk = np.abs(signal) >= th
+        tk = np.abs(signal) >= tau
         pos = np.where(tk, np.sign(signal), 0.0)
         grosses.append(((pos * r_block)[tk]).mean() * 1e4)
     return float(np.mean(grosses))
@@ -108,14 +123,15 @@ def main():
         f"tahun terakhir yang tersedia** ({recent_years[0]}-{recent_years[-1]}), rezim biaya yang "
         f"relevan untuk eksekusi NYATA hari ini, bukan rezim harga 2012.\n"
     )
-    lines.append(f"\n## Tabel kappa PER TAHUN KALENDER -- {symbol}, H240, skenario worst (FULL, tidak disembunyikan)\n")
-    lines.append("| tahun | harga rata-rata | spread p50 bps | spread p90 bps | sigma M5 bps | "
+    lines.append(f"\n## Tabel kappa PER TAHUN KALENDER -- {symbol}, H240, skenario worst BERSYARAT Q10 "
+                  f"(spread<=p50, FULL, tidak disembunyikan)\n")
+    lines.append("| tahun | harga rata-rata | spread p25 bps | spread p50 bps (basis worst) | sigma M5 bps | "
                   "biaya worst bps | sigma H240 bps | **kappa H240 worst** | n bar M5 |")
     lines.append("|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
     for _, r in yk.iterrows():
         marker = " **<-rezim-sekarang**" if r["year"] in recent_years else ""
-        lines.append(f"| {int(r['year'])}{marker} | {r['mean_price']:.1f} | {r['spread_p50_bps']:.3f} | "
-                      f"{r['spread_p90_bps']:.3f} | {r['sigma_m5_bps']:.3f} | {r['cost_worst_bps']:.2f} | "
+        lines.append(f"| {int(r['year'])}{marker} | {r['mean_price']:.1f} | {r['spread_p25_bps']:.3f} | "
+                      f"{r['spread_p50_bps']:.3f} | {r['sigma_m5_bps']:.3f} | {r['cost_worst_bps']:.2f} | "
                       f"{r['sigma_h240_bps']:.2f} | **{r['kappa_h240_worst']:.3f}** | {int(r['n_bars']):,} |")
 
     cost_full = regime_cost(symbol, full_years)
@@ -139,16 +155,19 @@ def main():
     span_years_recent = (m15_recent["bar_time"].max() - m15_recent["bar_time"].min()).days / 365.25
     br_eff_recent = len(r_block_recent) / max(span_years_recent, 0.1)
 
-    lines.append(f"\n## Expectancy bersih (gross edge - biaya) berdampingan: biaya-LAMA vs biaya-BARU\n")
-    lines.append(f"Sinyal sintetis, threshold ~220 trade/tahun, 100 seed per IC, dievaluasi pada blok "
-                  f"H240 dari **data rezim-sekarang saja** ({recent_years[0]}-{recent_years[-1]}, "
-                  f"n={len(r_block_recent)} blok) -- gross edge itu sendiri TIDAK berubah dengan rezim "
-                  f"biaya, yang berubah adalah biaya yang dikurangkan.\n")
-    lines.append("| IC | gross edge (bps) | net @ biaya-LAMA (seluruh riwayat, {:.1f}bps) | net @ biaya-BARU (rezim-sekarang, {:.1f}bps) |".format(cost_full, cost_recent))
-    lines.append("|---:|---:|---:|---:|")
-    for ic in [0.03, 0.05, 0.08, 0.15, 0.30]:
-        gross = gross_edge_at_ic(r_block_recent, ic, 100, 220.0, br_eff_recent)
-        lines.append(f"| {ic} | {gross:.2f} | {gross - cost_full:.2f} | {gross - cost_recent:.2f} |")
+    lines.append(f"\n## Expectancy bersih (gross edge - biaya) berdampingan: biaya-LAMA vs biaya-BARU, per tau\n")
+    lines.append(f"Sinyal sintetis, 100 seed per IC, dievaluasi pada blok H240 dari **data rezim-sekarang "
+                  f"saja** ({recent_years[0]}-{recent_years[-1]}, n={len(r_block_recent)} blok). Ambang "
+                  f"selektivitas tau EKSPLISIT (bukan diturunkan dari target frekuensi) -- edge per trade "
+                  f"= IC * sigma * E[z||z|>tau], E[z|.] naik dengan tau.\n")
+    for tau_v in [1.0, 1.5]:
+        lines.append(f"\n**tau={tau_v}**\n")
+        lines.append("| IC | gross edge (bps) | net @ biaya-LAMA ({:.1f}bps) | net @ biaya-BARU ({:.1f}bps) |"
+                      .format(cost_full, cost_recent))
+        lines.append("|---:|---:|---:|---:|")
+        for ic in [0.03, 0.05, 0.08, 0.15, 0.30]:
+            gross = gross_edge_at_ic(r_block_recent, ic, 100, tau_v)
+            lines.append(f"| {ic} | {gross:.2f} | {gross - cost_full:.2f} | {gross - cost_recent:.2f} |")
 
     lines.append(
         f"\n## Pernyataan metodologi (wajib dicantumkan di semua laporan turunan)\n\n"

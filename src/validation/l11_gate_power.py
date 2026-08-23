@@ -39,18 +39,18 @@ def synthetic_signal(r_block: np.ndarray, ic_target: float, rng: np.random.Gener
 
 
 def trial(r_block: np.ndarray, ic_target: float, seed: int, cost_bps_worst: float,
-          br_eff_per_year_full: float, mc2_rules: dict, target_trades_per_year: float = 220.0) -> dict:
+          br_eff_per_year_full: float, mc2_rules: dict, tau: float = 1.5) -> dict:
+    """tau: ambang kekuatan sinyal EKSPLISIT (z-score pada `signal`, yang
+    berdistribusi ~N(0,1) by construction), BUKAN diturunkan dari target
+    frekuensi trade. Selektivitas nyata: edge per trade = IC * sigma *
+    E[z | |z|>tau] -- E[z|.] naik dengan tau (tau=0 -> 0.80, tau=1.5 -> ~1.94
+    untuk normal baku), jadi kandidat yang lebih selektif menangkap lebih
+    banyak edge per trade untuk IC yang SAMA. Frekuensi trade adalah AKIBAT
+    dari tau (dilaporkan, bukan dipaksa ke angka tertentu)."""
     rng = np.random.default_rng(seed)
     signal = synthetic_signal(r_block, ic_target, rng)
 
-    # Threshold entry pada |signal| supaya frekuensi trade realistis (~220/thn,
-    # acuan H240 di spec), BUKAN trading di setiap blok. Trading setiap blok
-    # (1800+/thn) membuat biaya mendominasi murni karena frekuensi -- bukan
-    # temuan tentang gerbangnya. n_blocks_per_year dari data NYATA.
-    n_blocks_per_year = br_eff_per_year_full  # uniqueness=1, semua blok dihitung sebelum threshold
-    trade_rate = min(1.0, target_trades_per_year / max(n_blocks_per_year, 1.0))
-    threshold = np.quantile(np.abs(signal), 1 - trade_rate)
-    take = np.abs(signal) >= threshold
+    take = np.abs(signal) >= tau
     position = np.where(take, np.sign(signal), 0.0)
 
     gross = position * r_block
@@ -146,10 +146,10 @@ def per_filter_pass_rates(trials: list) -> dict:
 
 
 def run_l11(r_block: np.ndarray, ic_grid, n_seeds: int, cost_bps_worst: float,
-            br_eff_per_year_full: float, mc2_rules: dict, seed0: int = 10000) -> dict:
+            br_eff_per_year_full: float, mc2_rules: dict, seed0: int = 10000, tau: float = 1.5) -> dict:
     out = {}
     for ic in ic_grid:
-        trials = [trial(r_block, ic, seed0 + s, cost_bps_worst, br_eff_per_year_full, mc2_rules)
+        trials = [trial(r_block, ic, seed0 + s, cost_bps_worst, br_eff_per_year_full, mc2_rules, tau=tau)
                   for s in range(n_seeds)]
         n_t1 = sum(t["tier1"] for t in trials)
         n_t2 = sum(t.get("tier2", False) for t in trials)
@@ -168,8 +168,12 @@ def run_l11(r_block: np.ndarray, ic_grid, n_seeds: int, cost_bps_worst: float,
             if dsr >= 0.95:
                 n_t3 += 1
 
+        avg_n = float(np.mean([t["n"] for t in trials]))
         out[ic] = {
             "n_seeds": n_seeds,
+            "tau": tau,
+            "avg_n_trades": avg_n,
+            "avg_trades_per_year": avg_n / (len(r_block) / br_eff_per_year_full),
             "transmit_tier1_pct": 100 * n_t1 / n_seeds,
             "transmit_tier2_pct": 100 * n_t2 / n_seeds,
             "transmit_chain_pct": 100 * n_t3 / n_seeds,

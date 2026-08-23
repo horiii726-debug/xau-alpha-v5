@@ -1,65 +1,146 @@
 {
   "l10_passed": true,
-  "l11": {
-    "0.03": {
-      "n_seeds": 150,
-      "transmit_tier1_pct": 0.0,
-      "transmit_tier2_pct": 0.0,
-      "transmit_chain_pct": 0.0,
-      "sharpe_std_empirical": 0.3,
-      "n_pass_tier1": 0,
-      "n_pass_tier2": 0,
-      "n_pass_tier3": 0,
-      "tier1_filter_pass_pct": {
-        "F_EXPECT (net>0)": 0.0,
-        "F_T15 (t>=1.5)": 0.0,
-        "F_B02 (beat random-matched)": 80.0,
-        "F_B05 (beat coin-flip)": 91.33333333333333,
-        "F_BR (BR_eff>=100/thn)": 100.0
+  "l11_by_tau": {
+    "1.0": {
+      "0.03": {
+        "n_seeds": 150,
+        "tau": 1.0,
+        "avg_n_trades": 2980.8733333333334,
+        "avg_trades_per_year": 596.583005479452,
+        "transmit_tier1_pct": 0.0,
+        "transmit_tier2_pct": 0.0,
+        "transmit_chain_pct": 0.0,
+        "sharpe_std_empirical": 0.3,
+        "n_pass_tier1": 0,
+        "n_pass_tier2": 0,
+        "n_pass_tier3": 0,
+        "tier1_filter_pass_pct": {
+          "F_EXPECT (net>0)": 0.0,
+          "F_T15 (t>=1.5)": 0.0,
+          "F_B02 (beat random-matched)": 79.33333333333333,
+          "F_B05 (beat coin-flip)": 97.33333333333334,
+          "F_BR (BR_eff>=100/thn)": 100.0
+        },
+        "tier2_filter_pass_pct": {},
+        "n_reached_tier2": 0
       },
-      "tier2_filter_pass_pct": {},
-      "n_reached_tier2": 0
+      "0.05": {
+        "n_seeds": 150,
+        "tau": 1.0,
+        "avg_n_trades": 2981.233333333333,
+        "avg_trades_per_year": 596.6550547945204,
+        "transmit_tier1_pct": 0.0,
+        "transmit_tier2_pct": 0.0,
+        "transmit_chain_pct": 0.0,
+        "sharpe_std_empirical": 0.3,
+        "n_pass_tier1": 0,
+        "n_pass_tier2": 0,
+        "n_pass_tier3": 0,
+        "tier1_filter_pass_pct": {
+          "F_EXPECT (net>0)": 0.0,
+          "F_T15 (t>=1.5)": 0.0,
+          "F_B02 (beat random-matched)": 96.0,
+          "F_B05 (beat coin-flip)": 100.0,
+          "F_BR (BR_eff>=100/thn)": 100.0
+        },
+        "tier2_filter_pass_pct": {},
+        "n_reached_tier2": 0
+      },
+      "0.08": {
+        "n_seeds": 150,
+        "tau": 1.0,
+        "avg_n_trades": 2981.286666666667,
+        "avg_trades_per_year": 596.6657287671233,
+        "transmit_tier1_pct": 0.0,
+        "transmit_tier2_pct": 0.0,
+        "transmit_chain_pct": 0.0,
+        "sharpe_std_empirical": 0.3,
+        "n_pass_tier1": 0,
+        "n_pass_tier2": 0,
+        "n_pass_tier3": 0,
+        "tier1_filter_pass_pct": {
+          "F_EXPECT (net>0)": 0.0,
+          "F_T15 (t>=1.5)": 0.0,
+          "F_B02 (beat random-matched)": 100.0,
+          "F_B05 (beat coin-flip)": 100.0,
+          "F_BR (BR_eff>=100/thn)": 100.0
+        },
+        "tier2_filter_pass_pct": {},
+        "n_reached_tier2": 0
+      }
     },
-    "0.05": {
-      "n_seeds": 150,
-      "transmit_tier1_pct": 0.0,
-      "transmit_tier2_pct": 0.0,
-      "transmit_chain_pct": 0.0,
-      "sharpe_std_empirical": 0.3,
-      "n_pass_tier1": 0,
-      "n_pass_tier2": 0,
-      "n_pass_tier3": 0,
-      "tier1_filter_pass_pct": {
-        "F_EXPECT (net>0)": 0.0,
-        "F_T15 (t>=1.5)": 0.0,
-        "F_B02 (beat random-matched)": 95.33333333333334,
-        "F_B05 (beat coin-flip)": 98.66666666666667,
-        "F_BR (BR_eff>=100/thn)": 100.0
+    "1.5": {
+      "0.03": {
+        "n_seeds": 150,
+        "tau": 1.5,
+        "avg_n_trades": 1257.4466666666667,
+        "avg_trades_per_year": 251.66158630136985,
+        "transmit_tier1_pct": 0.0,
+        "transmit_tier2_pct": 0.0,
+        "transmit_chain_pct": 0.0,
+        "sharpe_std_empirical": 0.3,
+        "n_pass_tier1": 0,
+        "n_pass_tier2": 0,
+        "n_pass_tier3": 0,
+        "tier1_filter_pass_pct": {
+          "F_EXPECT (net>0)": 0.0,
+          "F_T15 (t>=1.5)": 0.0,
+          "F_B02 (beat random-matched)": 79.33333333333333,
+          "F_B05 (beat coin-flip)": 92.0,
+          "F_BR (BR_eff>=100/thn)": 100.0
+        },
+        "tier2_filter_pass_pct": {},
+        "n_reached_tier2": 0
       },
-      "tier2_filter_pass_pct": {},
-      "n_reached_tier2": 0
-    },
-    "0.08": {
-      "n_seeds": 150,
-      "transmit_tier1_pct": 0.0,
-      "transmit_tier2_pct": 0.0,
-      "transmit_chain_pct": 0.0,
-      "sharpe_std_empirical": 0.3,
-      "n_pass_tier1": 0,
-      "n_pass_tier2": 0,
-      "n_pass_tier3": 0,
-      "tier1_filter_pass_pct": {
-        "F_EXPECT (net>0)": 0.0,
-        "F_T15 (t>=1.5)": 0.0,
-        "F_B02 (beat random-matched)": 100.0,
-        "F_B05 (beat coin-flip)": 100.0,
-        "F_BR (BR_eff>=100/thn)": 100.0
+      "0.05": {
+        "n_seeds": 150,
+        "tau": 1.5,
+        "avg_n_trades": 1256.88,
+        "avg_trades_per_year": 251.54817534246575,
+        "transmit_tier1_pct": 0.0,
+        "transmit_tier2_pct": 0.0,
+        "transmit_chain_pct": 0.0,
+        "sharpe_std_empirical": 0.3,
+        "n_pass_tier1": 0,
+        "n_pass_tier2": 0,
+        "n_pass_tier3": 0,
+        "tier1_filter_pass_pct": {
+          "F_EXPECT (net>0)": 0.0,
+          "F_T15 (t>=1.5)": 0.0,
+          "F_B02 (beat random-matched)": 94.0,
+          "F_B05 (beat coin-flip)": 100.0,
+          "F_BR (BR_eff>=100/thn)": 100.0
+        },
+        "tier2_filter_pass_pct": {},
+        "n_reached_tier2": 0
       },
-      "tier2_filter_pass_pct": {},
-      "n_reached_tier2": 0
+      "0.08": {
+        "n_seeds": 150,
+        "tau": 1.5,
+        "avg_n_trades": 1256.5733333333333,
+        "avg_trades_per_year": 251.48679999999996,
+        "transmit_tier1_pct": 0.0,
+        "transmit_tier2_pct": 0.0,
+        "transmit_chain_pct": 0.0,
+        "sharpe_std_empirical": 0.3,
+        "n_pass_tier1": 0,
+        "n_pass_tier2": 0,
+        "n_pass_tier3": 0,
+        "tier1_filter_pass_pct": {
+          "F_EXPECT (net>0)": 0.0,
+          "F_T15 (t>=1.5)": 0.0,
+          "F_B02 (beat random-matched)": 100.0,
+          "F_B05 (beat coin-flip)": 100.0,
+          "F_BR (BR_eff>=100/thn)": 100.0
+        },
+        "tier2_filter_pass_pct": {},
+        "n_reached_tier2": 0
+      }
     }
   },
-  "gm3_pass": false,
-  "cost_worst_bps_h240": 23.838462693692296,
+  "gm3_pass_any_tau": false,
+  "best_tau": null,
+  "cost_worst_bps_h240": 10.130560684040445,
+  "cost_full_regime_bps": 10.62598780098822,
   "br_eff_per_year": 1880.2869863013698
 }
