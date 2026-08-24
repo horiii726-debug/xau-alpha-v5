@@ -1,11 +1,24 @@
-# SISTEM TRADING XAU v10 -- HASIL AKHIR: KELAS INFORMASI BARU JUGA NOL
+# SISTEM TRADING XAU v11 -- HASIL AKHIR: 22 FORMULA ARAH BARU (V10+V11), NOL SELAMAT
 
-**Status: UJI_BUNUH_M5 -> L15 -> V10 (impor jurnal) selesai.** V10 menguji
-KELAS INFORMASI baru (bukan varian harga) dari literatur akademik terverifikasi
-DOI/SSRN: 9 formula (dari 16 kandidat, di bawah plafon 20) lolos uji korelasi
-tapi **0/9 lolos G1-G6**. 4 di antaranya (OPT01, SEA01, SEA02, EVT01) secara
-eksplisit dicatat "tanda terbalik akan lolos G1" dan tetap DIBUANG sesuai
-aturan anti-data-mining pra-registrasi -- bukan dilonggarkan. Detail lengkap:
+**Status: UJI_BUNUH_M5 -> L15 -> V10 -> V11 selesai.** V11 memperluas V10
+dengan 13 formula baru: 9 dari registri arah v6 sendiri (E1 MOM/E2 MRV/E3 BRK
+-- yang genuinely belum pernah diuji di bawah nama apapun) + 4 formula kuant
+umum lintas-aset (safe-haven, lottery/skew, low-vol anomaly, pembalikan
+jangka panjang), semua dengan sitasi DOI/SSRN terverifikasi manual. 8/13
+ditolak uji korelasi (>0.30 vs registry lama -- tingkat penolakan tinggi,
+temuan itu sendiri informatif: ruang informasi baru dari transformasi harga
+makin jenuh). **0/5 sisanya lolos G1-G6.** Total formula arah unik diuji
+sepanjang V10+V11: **22 (9 dari V10 + 13 dari V11), 0 lolos semua gerbang.**
+
+**Catatan metodologi penting (V11):** divisi V (volatilitas), Q (spread/
+likuiditas), T (intensitas tick), S (struktur/rezim) di registri v6 --
+65 formula lagi -- SENGAJA TIDAK dipaksa lewat gerbang arah G1-G6. v6
+sendiri mengklasifikasikan mereka `estimation`, bukan `direction`: mereka
+mengukur KEADAAN pasar, bukan ARAH, dan memaksakan gerbang arah padanya
+berarti mengarang konvensi tanda yang tidak berdasar literatur -- justru
+melanggar aturan anti-ngasal proyek ini sendiri. Beberapa sudah dipakai
+sebagai KOMPONEN sah di formula arah yang diuji (Parkinson menskala
+MOM08/11/BRK01/03; Roll & Amihud = MIC03/01 di V10). Detail lengkap:
 `reports/V10_IMPOR_JURNAL.md`. Bagian B-E (SISTEM_TRADING_V7.md) **masih tidak
 dikerjakan** -- syarat L14 belum pernah terpenuhi di v6/v7/v8/v9/v10.
 
@@ -159,7 +172,7 @@ n mengecil (1,092, lebih sedikit observasi mingguan non-tumpang-tindih efektif)
 membuat estimasi long/short kurang stabil. **Perbaikan kappa nyata, tapi tidak
 cukup untuk membalik expectancy jadi positif.**
 
-## Ringkasan menyeluruh v6-v10 (semua yang pernah diuji)
+## Ringkasan menyeluruh v6-v11 (semua yang pernah diuji)
 
 ```
 Harga saja, return MENTAH          : 0/130 lolos G1
@@ -167,40 +180,47 @@ Harga saja, return DEMEANED        : 5/130 lolos G1 (belum diuji G2-G5)
 Makro (D1, demeaned+G1-G5)         : 0/14 lolos (2 lolos G1, gagal G2)
 M5 kill-test (biaya vs sigma)      : 0/15 kombinasi/hold lolos breakeven
 Makro (MINGGUAN, G1-G5 sama persis): 0/4 lolos (kappa turun 2.24x, masih G2/G1 gagal)
-Kelas informasi baru (jurnal, D1)  : 0/12 lolos G1-G6 (9 formula, 1 ditolak
-                                      pra-gerbang krn korelasi, 4 nyaris lolos
-                                      G1 tapi HANYA dgn tanda terbalik -- dibuang)
+Kelas informasi baru (jurnal, D1)  : 0/12 lolos G1-G6 (V10: 9 formula, 4 nyaris
+                                      lolos G1 tapi HANYA dgn tanda terbalik)
+Registri v6 (E1/E2/E3) + kuant umum: 0/5 lolos G1-G6 (V11: 13 formula, 8
+                                      ditolak pra-gerbang krn korelasi >0.30)
 
-TOTAL kombinasi/uji diuji sepanjang v6-v10: 176 (163 + 13 trial V10)
+TOTAL kombinasi/uji diuji sepanjang v6-v11: 189 (176 + 13 trial V11)
 TOTAL lolos SEMUA gerbang sampai G6:          0
 ```
 
 ## Kesimpulan jujur
 
-Setelah menguji enam kelas pendekatan berbeda -- harga mentah, harga demeaned,
+Setelah menguji tujuh kelas pendekatan berbeda -- harga mentah, harga demeaned,
 makro harian (real yield/DXY/breakeven/COT legacy), kelayakan struktural M5
 (biaya vs volatilitas murni, terlepas dari sinyal), makro mingguan (horizon
-sesuai frekuensi rilis data), dan kelas informasi BARU dari literatur akademik
+sesuai frekuensi rilis data), kelas informasi BARU dari literatur akademik
 (kointegrasi lintas-aset, variance risk premium, crowding DCOT, proksi order
-flow tick, musiman, event-driven pra-FOMC) -- **tidak ada satupun yang lolos
-gerbang statistik/ekonomi lengkap**. Polanya konsisten dan makin kuat lintas
-kelas: edge yang genuinely simetris (lolos G1) memang ada di beberapa tempat,
-tapi (a) di kelas harga/makro secara sistematis lebih kecil dari biaya
-prop-firm-realistis (gagal G2), dan (b) di kelas musiman/event V10, ADA
-asimetri statistik nyata bahkan setelah demean -- tapi arahnya berlawanan dari
-mekanisme akademik yang diimpor (gagal G1 dengan tanda benar, hanya lolos
-dengan tanda dibalik -- dibuang sesuai aturan anti-data-mining). Memperbaiki
+flow tick, musiman, event-driven pra-FOMC), dan registri arah v6 sendiri
+(momentum/mean-reversion/breakout) plus faktor kuant umum lintas-aset
+(safe-haven, lottery, low-vol anomaly, pembalikan jangka panjang) -- **tidak
+ada satupun yang lolos gerbang statistik/ekonomi lengkap**. Polanya konsisten
+dan makin kuat lintas kelas: edge yang genuinely simetris (lolos G1) memang
+ada di beberapa tempat, tapi (a) di kelas harga/makro secara sistematis lebih
+kecil dari biaya prop-firm-realistis (gagal G2), (b) di kelas musiman/event
+V10, ADA asimetri statistik nyata bahkan setelah demean -- tapi arahnya
+berlawanan dari mekanisme akademik yang diimpor (dibuang sesuai aturan
+anti-data-mining, tidak dibalik), dan (c) di V11, **mayoritas (8/13) formula
+baru justru terlalu MIRIP dengan sinyal yang sudah diuji** (korelasi >0.30) --
+temuan tersendiri: ruang informasi genuinely baru dari transformasi harga/
+volume/likuiditas sudah cukup jenuh setelah 6 putaran riset. Memperbaiki
 horizon (D1->W1) memperbaiki rasio biaya/sigma secara terukur dan sesuai
 prediksi teoretis, tapi belum cukup untuk membalik tanda expectancy.
 
-**Ini bukan "belum cukup dicoba".** 176 kombinasi/uji, enam kelas sinyal
-(termasuk 9 formula dari jurnal akademik terverifikasi DOI/SSRN), empat
-koreksi metodologi berturut (G1-demeaned, biaya bersyarat, kappa horizon-aware,
-uji korelasi pra-gerbang), enam horizon (M5 hold 1-24 bar, D1, W1), dan lima
-dataset independen (M5 2021-2026, H1 2003-2026, makro FRED/CFTC 2003-2026,
-DCOT 2006-2026, XAG 2021-2026).
+**Ini bukan "belum cukup dicoba".** 189 kombinasi/uji, tujuh kelas sinyal
+(termasuk 22 formula dari jurnal akademik/registri v6 terverifikasi DOI/SSRN
+di V10+V11), lima koreksi metodologi berturut (G1-demeaned, biaya bersyarat,
+kappa horizon-aware, uji korelasi pra-gerbang, dekai pasca-publikasi G6),
+enam horizon (M5 hold 1-24 bar, D1, W1), dan lima dataset independen (M5
+2021-2026, H1 2003-2026, makro FRED/CFTC 2003-2026, DCOT 2006-2026, XAG
+2021-2026).
 
-## Rekomendasi (posisi sekarang, setelah UJI_BUNUH_M5 -> L15 -> V10)
+## Rekomendasi (posisi sekarang, setelah UJI_BUNUH_M5 -> L15 -> V10 -> V11)
 
 | Pilihan | Isi | Status |
 |---|---|---|
