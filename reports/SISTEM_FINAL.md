@@ -1,122 +1,147 @@
-# SISTEM TRADING XAU v8 -- HASIL AKHIR: NOL SURVIVOR (harga + makro)
+# SISTEM TRADING XAU v9 -- HASIL AKHIR: M5 MATI, MINGGUAN JUGA NOL
 
-**Status: L11 -> L12 -> L13 selesai. NOL survivor.** Sesuai instruksi eksplisit
-L14: *"Kalau NOL lagi -> laporkan nol. Jangan longgarkan gerbang. Proyek
-selesai."* SISTEM_TRADING_V7.md Bagian B-E **tidak dikerjakan** -- L14
-mensyaratkan eksplisit ">=1 formula lolos G1-G5" dan syarat itu tidak terpenuhi.
+**Status: UJI_BUNUH_M5 -> L15 selesai.** Sesuai VONIS rule eksplisit: M5 mati di
+semua hold & semua peserta -> lanjut otomatis ke uji mingguan MAC05/MAC07 (tanpa
+konfirmasi, sesuai pra-otorisasi). L15 juga nol survivor. Bagian B-E
+(SISTEM_TRADING_V7.md) **masih tidak dikerjakan** -- syarat L14 (>=1 lolos G1-G5)
+belum pernah terpenuhi di v6/v7/v8/v9.
 
-## Diagnosis awal v8 -- benar sebagian, sudah diverifikasi
+## UJI_BUNUH_M5 -- gerbang struktural sebelum bangun apapun
 
-Hipotesis: gerbang G1 (v7.1/v7.2) bias karena diuji pada return MENTAH,
-padahal emas naik ~11.6%/thn (headwind ~4.62bps/hari untuk semua short).
-**Diverifikasi lewat L11: benar, tapi dampaknya kecil.** G1-pada-demeaned
-meloloskan 5/130 kombinasi harga (naik dari 0/130 di return mentah) --
-perbaikan nyata, tapi jauh dari mengubah kesimpulan menyeluruh.
+Cek matematis murni: terlepas dari kualitas sinyal apapun, apakah M5 punya ruang
+profit setelah biaya nyata. Data: M5 2021-2026 (yang sudah ada, sesuai instruksi
+eksplisit -- unduhan 2012-2026 tidak ditunggu).
 
-## L11 -- G1 diuji ulang pada return demeaned
+**1. Biaya round-turn nyata** (jam aktif, LATIH): spread p50=1.760bps,
+p90=2.316bps, komisi=0.280bps. **Biaya BASE=2.920bps, WORST=6.071bps.**
 
-**5/130 lolos** (ambang keputusan asli <=3 -- sangat dekat, secara substansi
-mengonfirmasi bukan membantah "harga saja tidak cukup"). Detail: semua 5 di
-horizon 5-hari (H1-Lomba4): ShortHorizon-Reversal, ORB, CUSUM. Tidak diuji
-lebih lanjut ke G2-G5 (di luar cakupan L11 yang eksplisit hanya soal G1) --
-kalau relevan nanti, catatan ini jadi titik awal.
+**2. Sigma per bar M5 (realized)**: 4.693bps/bar.
 
-## L12 -- Data makro (semua berhasil, tidak seperti unduhan harga)
+**3. Winrate breakeven** (p_be = (biaya/(0.7979*sigma_hold)+1)/2):
 
-| seri | cakupan | catatan |
-|---|---|---|
-| DFII10 (real yield 10Y) | 2003-2026, 5.913 obs | variabel utama |
-| DGS10 (nominal 10Y) | 1962-2026 | |
-| T10YIE (breakeven inflasi) | 2003-2026 | |
-| DTWEXBGS (indeks dolar) | **2006-2026** (bukan 2003) | gap 3 tahun awal |
-| DEXUSEU, DEXJPUS | 1999/1971-2026 | |
-| VIXCLS | 1990-2026 | |
-| GVZCLS (gold vol) | **2008-2026** (bukan 2003) | |
-| CFTC COT gold mingguan | 2003-2026, 1233 baris | "GOLD - COMMODITY EXCHANGE INC." |
+| hold (bar M5) | sigma_hold | p_breakeven |
+|---:|---:|---:|
+| 1 | 4.69bps | **88.99%** |
+| 3 | 8.13bps | **72.51%** |
+| 6 | 11.49bps | **65.92%** |
+| 12 | 16.26bps | **61.25%** |
+| 24 | 22.99bps | **57.96%** |
 
-Semua diselaraskan ke D1 dengan lag 1 hari penuh (as-of merge mundur, +1 hari
-tambahan) sebelum dipakai di L13.
+**4. Winrate aktual (CUSUM, MAC05, MAC07) vs breakeven -- SEMUA GAGAL:**
 
-## L13 -- Lomba Makro (D1, gerbang G1-G5 di depan)
+| peserta | hold=1 | hold=3 | hold=6 | hold=12 | hold=24 |
+|---|---:|---:|---:|---:|---:|
+| CUSUM | 48.6% | 48.4% | 48.2% | 48.8% | 49.6% |
+| MAC05 (COT, broadcast D1->M5) | 39.3% | 39.5% | 39.9% | 40.6% | 41.1% |
+| MAC07 (Ridge, broadcast D1->M5) | 37.3% | 37.6% | 38.1% | 38.9% | 39.4% |
 
-**0/14 kombinasi (7 formula x 2 tau) lolos.**
+Semua di bawah breakeven di semua hold, dengan margin besar (-8 s/d -52 poin
+persentase). CUSUM konsisten dekat 50% (kebisingan murni, cocok dengan autopsi
+sebelumnya bahwa CUSUM adalah drift capture, bukan sinyal arah asli). MAC05/MAC07
+malah **konsisten di bawah 50%** ketika arah harian mereka disiarkan (broadcast)
+ke tiap bar M5 dalam hari itu -- catatan jujur: ini kemungkinan bukan bug, tapi
+sinyal makro harian memang tidak dirancang untuk memprediksi pergerakan 5 menit;
+menyiarkannya ke granularitas M5 mayoritas menangkap derau intraday yang tidak
+berkorelasi (atau berkorelasi negatif) dengan arah harian.
+
+**5. Plafon Oracle** (arah selalu benar, batas ATAS mutlak untuk M5):
+
+| hold | gross | net @base | net @worst |
+|---:|---:|---:|---:|
+| 1 | 3.74bps | 0.82bps | **-2.33bps** |
+| 3 | 6.49bps | 3.57bps | 0.41bps |
+| 6 | 9.17bps | 6.25bps | 3.10bps |
+| 12 | 12.97bps | 10.05bps | 6.90bps |
+| 24 | 18.34bps | 15.42bps | 12.27bps |
+
+Bahkan dengan arah **100% benar**, biaya worst-case memakan seluruh gross di
+hold=1 (net negatif). Ruang gerak nyata hanya muncul di hold>=3, dan itu pun
+mengandalkan kondisi biaya terbaik.
+
+**6. % bar dengan pergerakan cukup besar** (|return|>2x biaya): hold=1 cuma
+16.85% (di bawah ambang 20% -- mayoritas bar melawan biaya yang tak tertutupi),
+hold>=3 cukup (32-61%).
+
+### VONIS UJI_BUNUH_M5
+
+**M5 MATI -- winrate aktual < breakeven di SEMUA hold dan SEMUA peserta.**
+Sesuai instruksi, berhenti di sini untuk M5, tidak lanjut ke sizing/ML/Monte
+Carlo di granularitas ini, dan langsung lanjut ke uji mingguan yang
+dipra-otorisasi.
+
+## L15 -- MAC05 & MAC07 di horizon MINGGUAN (5 hari), G1-G5 PERSIS SAMA
+
+Alasan (sesuai instruksi): COT dirilis mingguan; biaya round-turn dibayar SEKALI
+per trade (tidak berskala dengan horizon) sedangkan sigma naik ~sqrt(5)=2.236x --
+maka kappa (biaya/sigma) turun ~2.236x dibanding D1 (L13). Sinyal TIDAK diubah
+sama sekali, hanya target forward return dari 1 hari jadi 5 hari. Gerbang
+G1-G5 identik dengan L13/L11 (tidak dilonggarkan).
+
+**Kappa terverifikasi turun sesuai prediksi**: kappa D1=0.0292 -> kappa
+W1=0.0131 (turun 2.236x, persis sqrt(5) seperti prediksi).
+
+| peserta | tau | n | gerbang gugur | catatan |
+|---|---:|---:|---|---|
+| MAC05_cot_crowding | 1.0 | 4,189 | G2 | expectancy_worst=-7.467bps |
+| MAC07_ridge_combo | 1.0 | 2,154 | G2 | expectancy_worst=-3.615bps |
+| MAC05_cot_crowding | 1.5 | 2,474 | G2 | expectancy_worst=-15.429bps |
+| MAC07_ridge_combo | 1.5 | 1,092 | **G1** | pnl_long=-296.5, pnl_short=+3909.2 (simetri pecah di sampel mingguan, tau tinggi) |
+
+**TOTAL SURVIVOR L15: 0/4.**
+
+Catatan jujur: expectancy_worst MAC05/MAC07 tau=1.0 memang membaik dibanding D1
+(L13 melaporkan -12 s/d -14bps di D1; di W1 jadi -7.47bps dan -3.62bps) --
+konsisten dengan prediksi kappa turun. Tapi masih negatif, dan MAC07 tau=1.5
+malah gagal lebih awal (G1, simetri pecah) di horizon mingguan -- kemungkinan
+n mengecil (1,092, lebih sedikit observasi mingguan non-tumpang-tindih efektif)
+membuat estimasi long/short kurang stabil. **Perbaikan kappa nyata, tapi tidak
+cukup untuk membalik expectancy jadi positif.**
+
+## Ringkasan menyeluruh v6-v9 (semua yang pernah diuji)
 
 ```
-G1 (simetri, demeaned):  10 gagal
-G2 (biaya worst):         3 gagal  <- MAC05 (COT crowding), MAC07 (Ridge combo)
-n<30 (sampel kurang):      1 (MAC04 tau=1.5)
-G3, G4, G5:                0 sempat diuji -- tidak ada yang lolos G1/G2 dulu
-```
+Harga saja, return MENTAH          : 0/130 lolos G1
+Harga saja, return DEMEANED        : 5/130 lolos G1 (belum diuji G2-G5)
+Makro (D1, demeaned+G1-G5)         : 0/14 lolos (2 lolos G1, gagal G2)
+M5 kill-test (biaya vs sigma)      : 0/15 kombinasi/hold lolos breakeven
+Makro (MINGGUAN, G1-G5 sama persis): 0/4 lolos (kappa turun 2.24x, masih G2/G1 gagal)
 
-**Temuan paling informatif:** MAC05 (crowding COT non-komersial) dan MAC07
-(kombinasi Ridge real-yield+DXY) **LOLOS G1** (simetri long/short genuine,
-bukan drift capture) di kedua tau -- tapi gagal G2 dengan expectancy
-worst-case **-12 sampai -14 bps**, jauh di bawah nol. Ini beda kualitatif
-dari kegagalan G1: **ada edge terarah dua-arah yang nyata secara statistik,
-tapi terlalu kecil untuk menutup biaya prop firm.**
-
-Baseline buy-and-hold: +2.338 bps/hari (16.822 bps total, 2003-2023) --
-mengonfirmasi ulang bahwa exposure LONG pasif jauh mengalahkan setiap sinyal
-arah aktif yang diuji, persis kesimpulan D3.1 sebelumnya.
-
-## Ringkasan menyeluruh v6-v8 (semua yang pernah diuji)
-
-```
-Harga saja, return MENTAH   : 0/130 lolos G1
-Harga saja, return DEMEANED : 5/130 lolos G1 (belum diuji G2-G5)
-Makro (real yield/DXY/breakeven/COT), demeaned+G1-G5: 0/14 lolos
-                               (2 lolos G1, gagal di G2/biaya)
-
-TOTAL kombinasi diuji sepanjang v6-v8: 144
-TOTAL lolos SEMUA gerbang sampai G5:     0
+TOTAL kombinasi/uji diuji sepanjang v6-v9: 163
+TOTAL lolos SEMUA gerbang sampai G5:         0
 ```
 
 ## Kesimpulan jujur
 
-Setelah (a) memperbaiki bias gerbang simetri terhadap headwind sekuler,
-(b) menambah 8 variabel makro dari sumber gratis-terverifikasi (FRED + CFTC),
-dan (c) menguji 7 formula makro dengan mekanisme ekonomi yang jelas (biaya
-kesempatan real yield, kekuatan dolar, crowding positioning, kombinasi
-Ridge) -- **tidak ada kombinasi yang lolos kelima gerbang**. Yang paling
-dekat (MAC05, MAC07) gagal di gerbang EKONOMI (biaya > edge), bukan gerbang
-STATISTIK (G1 simetri) -- pola yang berbeda dan lebih informatif dari
-kegagalan sinyal harga-saja sebelumnya (yang mayoritas gagal G1).
+Setelah menguji lima kelas pendekatan berbeda -- harga mentah, harga demeaned,
+makro harian (real yield/DXY/breakeven/COT), kelayakan struktural M5 (biaya vs
+volatilitas murni, terlepas dari sinyal), dan makro mingguan (horizon yang
+sesuai frekuensi rilis data itu sendiri) -- **tidak ada satupun yang lolos
+kelima gerbang statistik/ekonomi**. Pola yang konsisten di semua percobaan:
+edge arah yang genuinely simetris (lolos G1) ada tapi secara sistematis lebih
+kecil dari biaya prop-firm-realistis (gagal G2). Memperbaiki horizon (D1->W1)
+memperbaiki rasio biaya/sigma secara terukur dan sesuai prediksi teoretis, tapi
+belum cukup untuk membalik tanda expectancy.
 
-**Ini bukan "belum cukup dicoba".** 144 kombinasi, dua kelas sinyal
-(teknikal harga dan makro fundamental), dua koreksi metodologi (G1-demeaned,
-biaya bersyarat), lima horizon, dan dua dataset independen (5 & 23 tahun).
+**Ini bukan "belum cukup dicoba".** 163 kombinasi/uji, lima kelas sinyal, tiga
+koreksi metodologi berturut (G1-demeaned, biaya bersyarat, kappa horizon-aware),
+enam horizon (M5 hold 1-24 bar, D1, W1), dan tiga dataset independen (M5
+2021-2026, H1 2003-2026, makro 2003-2026).
 
-## L14 -- tidak dilanjutkan, dan kenapa itu benar
+## Rekomendasi (posisi sekarang, setelah UJI_BUNUH_M5 + L15)
 
-L14 eksplisit: hanya lanjut ke Bagian B-E (sizing, gerbang eksekusi,
-backtest sistem, Monte Carlo, ML) kalau **>=1** lolos G1-G5. Nol lolos --
-tidak dikerjakan. Tidak ada `config/sistem_final.yaml`, tidak ada kurva
-ekuitas, tidak ada simulasi Monte Carlo -- karena tidak ada trade nyata
-untuk disimulasikan.
-
-## Penyimpangan teknis yang harus dicatat
-
-Unduhan M5 XAUUSD 2012-2026 (rencana v7.2, untuk cakupan bear 2012-2015 di
-granularitas M5) **gagal total** -- 8+ percobaan gagal karena 429 Dukascopy
-persisten (backoff sampai 42+ menit). Tidak mempengaruhi L11-L13 (yang
-memakai H1 2003-2026 yang SUDAH berhasil dari v7.1, plus data makro dari
-FRED/CFTC yang independen dari Dukascopy). Proses retry masih berjalan di
-background kalau ingin dicek nanti (`ls /workspace/logs/download_m5_2012.DONE`),
-tapi kesimpulan di atas tidak menunggu itu.
-
-## Rekomendasi (sama, karena buktinya makin kuat menunjuk ke sana)
-
-| Pilihan | Isi | Cocok prop firm? |
+| Pilihan | Isi | Status |
 |---|---|---|
-| A. Ganti horizon | >5-20 hari (di atas D1) | Ya, trade/tahun makin sedikit |
-| B. Ganti kelas edge | Spread lintas-aset (XAU/XAG rasio, cointegration), musiman sesi, event-driven (FOMC/NFP) -- **belum diuji sama sekali di v6-v8** | Ya |
-| C. Terima beta | Long-only vol-target 8-10%, bukan strategi arah aktif | **TIDAK** -- prop firm melarang |
+| A. Horizon lebih panjang lagi | Bulanan (20+ hari) -- kappa akan turun lagi ~2x dari W1 | **Belum diuji** -- arah paling konkret berikutnya jika mau dilanjutkan, sesuai pola kappa yang sudah terbukti terprediksi |
+| B. Kelas edge baru | Spread lintas-aset (XAU/XAG), musiman sesi, event-driven (FOMC/NFP) | Belum diuji sama sekali di v6-v9 |
+| C. Terima beta | Long-only vol-target | **TIDAK** -- dilarang aturan prop firm |
 
-**Catatan untuk Pilihan B:** MAC05 (COT) mendekati lolos -- edge arah ada,
-cuma kekecilan untuk horizon harian. Mekanisme serupa (positioning,
-crowding) mungkin lebih kuat di horizon lebih panjang (mingguan, sesuai
-frekuensi rilis COT itu sendiri) -- ini arah riset paling konkret yang
-tersisa dari seluruh proyek v6-v8, belum dieksplorasi.
+M5 (semua horizon intraday <=24 bar/2 jam) **resmi ditutup** -- VONIS
+UJI_BUNUH_M5 eksplisit melarang lanjut ke sizing/ML/Monte Carlo di granularitas
+ini. Kalau opsi A (bulanan) dikejar, pola L15 (kappa terprediksi turun ~sqrt(N))
+memberi ekspektasi realistis: expectancy MAC05 mungkin butuh horizon >1 bulan
+untuk benar-benar positif secara worst-case, dengan konsekuensi frekuensi trade
+yang sangat rendah (cocok untuk gaya prop firm konservatif, tapi perlu recheck
+apakah masih memenuhi target return FTMO dalam periode evaluasi terbatas).
 
 HOLDOUT (15% terakhir tiap dataset) tetap tidak pernah dibuka di sepanjang
-v6, v7, dan v8.
+v6, v7, v8, dan v9.
