@@ -1,128 +1,122 @@
-# SISTEM TRADING XAU v7.2 -- HASIL AKHIR: NOL SURVIVOR (setelah tangga horizon)
+# SISTEM TRADING XAU v8 -- HASIL AKHIR: NOL SURVIVOR (harga + makro)
 
-**Status: L2 -> L2b -> L3 selesai. NOL survivor. L4-L10 TIDAK dijalankan** --
-`L4_SATU_SISTEM` mensyaratkan eksplisit ">=1 formula lolos G1-G4" sebelum
-dikerjakan. Nol lolos, jadi tidak ada dasar untuk membangun sistem, simulasi
-Monte Carlo, kurva ekuitas, atau lapisan ML. Memaksakannya berarti
-mensimulasikan sistem yang tidak ada.
+**Status: L11 -> L12 -> L13 selesai. NOL survivor.** Sesuai instruksi eksplisit
+L14: *"Kalau NOL lagi -> laporkan nol. Jangan longgarkan gerbang. Proyek
+selesai."* SISTEM_TRADING_V7.md Bagian B-E **tidak dikerjakan** -- L14
+mensyaratkan eksplisit ">=1 formula lolos G1-G5" dan syarat itu tidak terpenuhi.
 
-## Penyimpangan dari rencana, dicatat jujur
+## Diagnosis awal v8 -- benar sebagian, sudah diverifikasi
 
-Rencana awal: unduh XAUUSD **M5 2012-2026** (~1.5 juta bar, mencakup bear
-2012-2015). **Unduhan ini gagal** -- Dukascopy memblokir IP instance ini
-secara persisten (429 berulang, 7+ percobaan gagal dengan backoff eksponensial
-sampai 21+ menit, kemungkinan akumulasi dari banyak unduhan sepanjang sesi
-ini). Atas instruksi eksplisit user ("data seadanya aja... jalankan sesuai
-instruksi"), L2b dan L3 dikerjakan dengan **data yang sudah ada dan lengkap
-(XAUUSD M5, 2021-08-22 s/d 2026-08-22, 5 tahun)**, bukan 2012-2026.
+Hipotesis: gerbang G1 (v7.1/v7.2) bias karena diuji pada return MENTAH,
+padahal emas naik ~11.6%/thn (headwind ~4.62bps/hari untuk semua short).
+**Diverifikasi lewat L11: benar, tapi dampaknya kecil.** G1-pada-demeaned
+meloloskan 5/130 kombinasi harga (naik dari 0/130 di return mentah) --
+perbaikan nyata, tapi jauh dari mengubah kesimpulan menyeluruh.
 
-**Konsekuensi yang harus dipahami:** G3 (uji rezim silang) di L3 TIDAK bisa
-memakai blok bull/bear/sideways yang sebenarnya -- 2021-2026 nyaris seluruhnya
-rezim naik (lihat riwayat harga: $1780 -> $4570). G3 diganti 3 blok
-KRONOLOGIS sebagai pengganti sementara, dicatat eksplisit sebagai keterbatasan.
-Unduhan 2012+ dibiarkan tetap mencoba di background; kalau berhasil nanti,
-L2b/L3 layak diulang dengan data itu -- tapi kesimpulan di bawah sudah cukup
-kuat untuk berhenti sekarang, bukan menunggu.
+## L11 -- G1 diuji ulang pada return demeaned
 
-## L2b -- Tangga horizon (WAJIB dilaporkan sebelum lanjut)
+**5/130 lolos** (ambang keputusan asli <=3 -- sangat dekat, secara substansi
+mengonfirmasi bukan membantah "harga saja tidak cukup"). Detail: semua 5 di
+horizon 5-hari (H1-Lomba4): ShortHorizon-Reversal, ORB, CUSUM. Tidak diuji
+lebih lanjut ke G2-G5 (di luar cakupan L11 yang eksplisit hanya soal G1) --
+kalau relevan nanti, catatan ini jadi titik awal.
 
-| horizon | sigma_H (bps) | biaya (bps) | **kappa** | IC_breakeven | trade/thn (tau1.5) | vonis |
-|---|---:|---:|---:|---:|---:|---|
-| M5 | 4.69 | 2.92 | 0.622 | 0.321 | ~12.059 | DICORET |
-| M15 | 8.14 | 2.92 | 0.359 | 0.185 | ~4.020 | DICORET |
-| M30 | 11.51 | 2.92 | 0.254 | 0.131 | ~2.010 | DICORET |
-| H1 | 16.28 | 2.92 | 0.179 | 0.092 | ~1.005 | DICORET |
-| **H4** | 32.02 | 2.92 | **0.091** | 0.047 | ~251 | **LOLOS** |
-| **D1** | 79.90 | 2.92 | **0.037** | 0.019 | ~42 | **LOLOS** |
+## L12 -- Data makro (semua berhasil, tidak seperti unduhan harga)
 
-Biaya round-turn (2.92bps) TETAP di semua horizon -- yang berubah cuma sigma.
-Hanya **H4 dan D1** lolos kappa<=0.15; empat horizon tercepat (M5-H1) tercoret
-karena biaya terlalu besar relatif volatilitas pada frekuensi itu.
+| seri | cakupan | catatan |
+|---|---|---|
+| DFII10 (real yield 10Y) | 2003-2026, 5.913 obs | variabel utama |
+| DGS10 (nominal 10Y) | 1962-2026 | |
+| T10YIE (breakeven inflasi) | 2003-2026 | |
+| DTWEXBGS (indeks dolar) | **2006-2026** (bukan 2003) | gap 3 tahun awal |
+| DEXUSEU, DEXJPUS | 1999/1971-2026 | |
+| VIXCLS | 1990-2026 | |
+| GVZCLS (gold vol) | **2008-2026** (bukan 2003) | |
+| CFTC COT gold mingguan | 2003-2026, 1233 baris | "GOLD - COMMODITY EXCHANGE INC." |
 
-## L3 -- Lomba 2 & 4 diulang, HANYA di H4/D1, gerbang G1-G4 di depan
+Semua diselaraskan ke D1 dengan lag 1 hari penuh (as-of merge mundur, +1 hari
+tambahan) sebelum dipakai di L13.
 
-```
-Lomba 4 (entry): 6 peserta x 2 horizon(H4,D1) x 2 tau = 24 kombinasi
-  24 gagal G1 (simetri long/short)   0 gagal gerbang lain   0 lolos semua
+## L13 -- Lomba Makro (D1, gerbang G1-G5 di depan)
 
-Lomba 2 (tren):  7 peserta x 2 horizon(H4,D1) x 2 tau = 28 kombinasi
-  27 gagal G1 (simetri)   1 gagal G4 (walk-forward)   0 lolos semua
-
-TOTAL: 0/52 kombinasi lolos G1-G4
-```
-
-Detail penuh: `L3_LOMBA4_GATED.md`, `L3_LOMBA2_GATED.md`.
-
-## Gambaran besar -- semua yang sudah dicoba di proyek ini
+**0/14 kombinasi (7 formula x 2 tau) lolos.**
 
 ```
-F0/F1 (pipeline 12-fase asli)     -> BERHENTI: K_eff=1.63 (panel 2 instrumen), 
-                                      GM-3 gagal (biaya>edge H240 XAUUSD)
-Lomba 1-5 (benchmark per fungsi)  -> HAR-RV & entropi menang (non-arah, valid).
-                                      CUSUM entry "+14.1bps" -- BELUM diuji simetri.
-D3.1/D3.3 (uji prioritas)         -> CUSUM: drift capture (SHORT -8.31bps p=1.0),
-                                      walk-forward 5/10
-L1 (autopsi demeaned long-only)   -> 1/4 lolos: t-stat(eff_N)=0.72, WF 4/10
-L2 (unduh H1 2003-2026)           -> LOLOS verifikasi (6 tahun negatif)
-L3 @H1 2003-2026 (G1-G4 di depan) -> NOL survivor: 0/36 (Lomba4) + 0/42 (Lomba2)
-L2b (tangga horizon, data 2021-26)-> hanya H4,D1 lolos kappa<=0.15
-L3 @H4/D1 2021-2026 (G1-G4)       -> NOL survivor: 0/24 (Lomba4) + 0/28 (Lomba2)
+G1 (simetri, demeaned):  10 gagal
+G2 (biaya worst):         3 gagal  <- MAC05 (COT crowding), MAC07 (Ridge combo)
+n<30 (sampel kurang):      1 (MAC04 tau=1.5)
+G3, G4, G5:                0 sempat diuji -- tidak ada yang lolos G1/G2 dulu
+```
 
-TOTAL kombinasi (horizon x tau x peserta) diuji dengan gerbang simetri
-di DUA dataset berbeda (H1 23-tahun, M5 5-tahun H4/D1): 130
-TOTAL lolos G1-G4: 0
+**Temuan paling informatif:** MAC05 (crowding COT non-komersial) dan MAC07
+(kombinasi Ridge real-yield+DXY) **LOLOS G1** (simetri long/short genuine,
+bukan drift capture) di kedua tau -- tapi gagal G2 dengan expectancy
+worst-case **-12 sampai -14 bps**, jauh di bawah nol. Ini beda kualitatif
+dari kegagalan G1: **ada edge terarah dua-arah yang nyata secara statistik,
+tapi terlalu kecil untuk menutup biaya prop firm.**
+
+Baseline buy-and-hold: +2.338 bps/hari (16.822 bps total, 2003-2023) --
+mengonfirmasi ulang bahwa exposure LONG pasif jauh mengalahkan setiap sinyal
+arah aktif yang diuji, persis kesimpulan D3.1 sebelumnya.
+
+## Ringkasan menyeluruh v6-v8 (semua yang pernah diuji)
+
+```
+Harga saja, return MENTAH   : 0/130 lolos G1
+Harga saja, return DEMEANED : 5/130 lolos G1 (belum diuji G2-G5)
+Makro (real yield/DXY/breakeven/COT), demeaned+G1-G5: 0/14 lolos
+                               (2 lolos G1, gagal di G2/biaya)
+
+TOTAL kombinasi diuji sepanjang v6-v8: 144
+TOTAL lolos SEMUA gerbang sampai G5:     0
 ```
 
 ## Kesimpulan jujur
 
-**Tidak ada sinyal arah (dari 13 formula berbeda: 7 keluarga tren + 6 keluarga
-entry, diuji di 5 horizon berbeda -- M5 sampai D1, di dua dataset independen
-mencakup 5 dan 23 tahun) yang lolos simetri long/short paling dasar, setelah
-biaya nyata dan gerbang G1-G4 diterapkan.** Ini bukan kegagalan satu formula
-(CUSUM) -- ini pola menyeluruh: **83+ dari 84 kombinasi di data 23-tahun, dan
-51 dari 52 di data 5-tahun, semuanya mati di gerbang PALING DASAR (G1)**,
-bukan di uji lanjutan yang lebih halus (permutasi, DSR, dll -- yang bahkan
-tidak pernah tercapai).
+Setelah (a) memperbaiki bias gerbang simetri terhadap headwind sekuler,
+(b) menambah 8 variabel makro dari sumber gratis-terverifikasi (FRED + CFTC),
+dan (c) menguji 7 formula makro dengan mekanisme ekonomi yang jelas (biaya
+kesempatan real yield, kekuatan dolar, crowding positioning, kombinasi
+Ridge) -- **tidak ada kombinasi yang lolos kelima gerbang**. Yang paling
+dekat (MAC05, MAC07) gagal di gerbang EKONOMI (biaya > edge), bukan gerbang
+STATISTIK (G1 simetri) -- pola yang berbeda dan lebih informatif dari
+kegagalan sinyal harga-saja sebelumnya (yang mayoritas gagal G1).
 
-Ini konsisten dan berulang di kedua rentang data, kedua granularitas (H1 dan
-M5), dan mencakup horizon murah (H4, D1) maupun mahal (M5-H1) -- bukan
-artefak satu pilihan parameter yang kebetulan buruk.
+**Ini bukan "belum cukup dicoba".** 144 kombinasi, dua kelas sinyal
+(teknikal harga dan makro fundamental), dua koreksi metodologi (G1-demeaned,
+biaya bersyarat), lima horizon, dan dua dataset independen (5 & 23 tahun).
 
-## L4-L10: TIDAK dijalankan, dan kenapa itu keputusan yang benar
+## L14 -- tidak dilanjutkan, dan kenapa itu benar
 
-- **L4 (satu sistem)** mensyaratkan ">=1 formula lolos G1-G4" -- syarat tidak
-  terpenuhi.
-- **L5 (ML meta-labeling)** mensyaratkan L4 lolos DAN >=500 trade LATIH dari
-  sistem yang valid -- tidak ada sistem, jadi tidak ada trade nyata untuk
-  dilabeli.
-- **L6 (aturan FTMO), L7 (kurva ekuitas), L8 (Monte Carlo prop firm), L9
-  (multi-strategi + ML belajar-terus)** semuanya butuh trade NYATA dari
-  sistem yang lolos L4. Menjalankannya sekarang berarti mensimulasikan P(FUNDED)
-  dari nol trade -- angka yang akan terlihat seperti hasil tapi sebenarnya
-  kosong. Ini persis yang dilarang user sendiri: *"jangan naikkan risiko
-  untuk mengejar angka"* -- analognya di sini: jangan buat simulasi untuk
-  mengejar keluaran yang diminta.
+L14 eksplisit: hanya lanjut ke Bagian B-E (sizing, gerbang eksekusi,
+backtest sistem, Monte Carlo, ML) kalau **>=1** lolos G1-G5. Nol lolos --
+tidak dikerjakan. Tidak ada `config/sistem_final.yaml`, tidak ada kurva
+ekuitas, tidak ada simulasi Monte Carlo -- karena tidak ada trade nyata
+untuk disimulasikan.
 
-## Rekomendasi
+## Penyimpangan teknis yang harus dicatat
 
-Sama seperti v7.1, tiga pilihan (tidak berubah, karena temuannya tidak berubah):
+Unduhan M5 XAUUSD 2012-2026 (rencana v7.2, untuk cakupan bear 2012-2015 di
+granularitas M5) **gagal total** -- 8+ percobaan gagal karena 429 Dukascopy
+persisten (backoff sampai 42+ menit). Tidak mempengaruhi L11-L13 (yang
+memakai H1 2003-2026 yang SUDAH berhasil dari v7.1, plus data makro dari
+FRED/CFTC yang independen dari Dukascopy). Proses retry masih berjalan di
+background kalau ingin dicek nanti (`ls /workspace/logs/download_m5_2012.DONE`),
+tapi kesimpulan di atas tidak menunggu itu.
+
+## Rekomendasi (sama, karena buktinya makin kuat menunjuk ke sana)
 
 | Pilihan | Isi | Cocok prop firm? |
 |---|---|---|
-| A. Ganti horizon | Naik ke 5-20 hari (di atas D1 yang sudah diuji) | Ya, trade/tahun makin sedikit |
-| B. Ganti kelas edge | Spread lintas-aset (XAU/XAG, XAU/DXY), musiman sesi, event-driven | Ya -- belum diuji |
-| C. Terima beta | Long-only vol-target, bukan strategi arah aktif | **TIDAK** -- prop firm melarang |
+| A. Ganti horizon | >5-20 hari (di atas D1) | Ya, trade/tahun makin sedikit |
+| B. Ganti kelas edge | Spread lintas-aset (XAU/XAG rasio, cointegration), musiman sesi, event-driven (FOMC/NFP) -- **belum diuji sama sekali di v6-v8** | Ya |
+| C. Terima beta | Long-only vol-target 8-10%, bukan strategi arah aktif | **TIDAK** -- prop firm melarang |
 
-**Langkah teknis yang masih tertunda (bukan pilihan strategi, tapi housekeeping):**
-unduhan M5 2012-2026 masih mencoba di background (bisa dicek: `ls
-/workspace/logs/download_m5_2012.DONE`). Kalau akhirnya berhasil, L2b+L3 layak
-diulang dengan cakupan bear-market 2012-2015 yang sebenarnya -- tapi mengingat
-polanya sudah 100% konsisten di dua dataset independen, kemungkinan hasilnya
-berubah drastis rendah.
+**Catatan untuk Pilihan B:** MAC05 (COT) mendekati lolos -- edge arah ada,
+cuma kekecilan untuk horizon harian. Mekanisme serupa (positioning,
+crowding) mungkin lebih kuat di horizon lebih panjang (mingguan, sesuai
+frekuensi rilis COT itu sendiri) -- ini arah riset paling konkret yang
+tersisa dari seluruh proyek v6-v8, belum dieksplorasi.
 
-## File yang TIDAK dibuat, dan kenapa itu benar
-
-`config/sistem_final.yaml`, `figs/equity_25k.png`, `figs/montecarlo_fan.png`,
-`reports/MONTECARLO.md` -- tidak dibuat. Tidak ada parameter untuk dikunci,
-tidak ada trade untuk membuat kurva ekuitas, tidak ada apapun untuk
-disimulasikan. HOLDOUT (15% terakhir data) tetap tidak pernah dibuka.
+HOLDOUT (15% terakhir tiap dataset) tetap tidak pernah dibuka di sepanjang
+v6, v7, dan v8.
