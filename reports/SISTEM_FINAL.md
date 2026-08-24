@@ -1,10 +1,72 @@
-# SISTEM TRADING XAU v9 -- HASIL AKHIR: M5 MATI, MINGGUAN JUGA NOL
+# SISTEM TRADING XAU v10 -- HASIL AKHIR: KELAS INFORMASI BARU JUGA NOL
 
-**Status: UJI_BUNUH_M5 -> L15 selesai.** Sesuai VONIS rule eksplisit: M5 mati di
-semua hold & semua peserta -> lanjut otomatis ke uji mingguan MAC05/MAC07 (tanpa
-konfirmasi, sesuai pra-otorisasi). L15 juga nol survivor. Bagian B-E
-(SISTEM_TRADING_V7.md) **masih tidak dikerjakan** -- syarat L14 (>=1 lolos G1-G5)
-belum pernah terpenuhi di v6/v7/v8/v9.
+**Status: UJI_BUNUH_M5 -> L15 -> V10 (impor jurnal) selesai.** V10 menguji
+KELAS INFORMASI baru (bukan varian harga) dari literatur akademik terverifikasi
+DOI/SSRN: 9 formula (dari 16 kandidat, di bawah plafon 20) lolos uji korelasi
+tapi **0/9 lolos G1-G6**. 4 di antaranya (OPT01, SEA01, SEA02, EVT01) secara
+eksplisit dicatat "tanda terbalik akan lolos G1" dan tetap DIBUANG sesuai
+aturan anti-data-mining pra-registrasi -- bukan dilonggarkan. Detail lengkap:
+`reports/V10_IMPOR_JURNAL.md`. Bagian B-E (SISTEM_TRADING_V7.md) **masih tidak
+dikerjakan** -- syarat L14 belum pernah terpenuhi di v6/v7/v8/v9/v10.
+
+## V10 -- Impor rumus dari jurnal (kelas informasi baru)
+
+Anggaran keras: maksimal 20 formula baru, sitasi WAJIB DOI/SSRN terverifikasi
+(dicek manual lewat pencarian web, bukan dikarang), tanda diprediksi SEBELUM
+diuji, parameter asli paper di lintasan pertama, gerbang G1-G6 (G6 baru: dekai
+pasca-publikasi McLean & Pontiff 2016) SAMA PERSIS dengan L13/L15.
+
+**9 formula diimplementasikan** (dari 16 kandidat yang diriset): XAS01
+(kointegrasi gold-silver, Escribano & Granger 1998), OPT01 (variance risk
+premium gold, Nguyen/Prokopczuk/Wese Simen 2019, J. Int'l Money & Finance),
+COT02 (crowding Managed Money DCOT, Chen & Mo 2023), MIC01-03 (Amihud 2002,
+Kyle 1985, Roll 1984 -- proksi order flow dari data tick M5), SEA01 (turn-of-
+month, Lakonishok & Smidt 1988), SEA02 (efek hari-minggu, French 1980 + Kohli
+2012), EVT01 (pra-FOMC ditransfer ke gold, Lucca & Moench 2015).
+
+**7 kandidat dibuang SEBELUM implementasi** (jujur, bukan disembunyikan):
+struktur berjangka/lease rate (data tidak tersedia gratis -- GOFO dihentikan
+2015), GDX lead-lag (tidak ada sitasi akademik, hanya blog industri), skew
+opsi & term structure GVZ (data tidak tersedia), rasio konsentrasi COT
+(sitasi tidak bisa diverifikasi -- PDF korup), CPI/NFP surprise-day (jadwal
+rilis presisi tidak terverifikasi), sesi London/NY (mismatch horizon --
+mekanismenya intraday-jam sedangkan M5 sudah terbukti mati).
+
+**Uji korelasi vs registry lama (ambang |r|<=0.30, SEBELUM gerbang):** COT02
+ditolak (korelasi 0.599 vs MAC05_cot_crowding -- terlalu mirip sinyal COT lama
+yang sudah diuji). 8 sisanya lolos uji korelasi (|r| 0.04-0.28).
+
+**Hasil G1-G6 (8 formula x tau-grid bertingkat = 12 kombinasi, total trial
+13 termasuk COT02):**
+
+```
+G1 (simetri, demeaned): 9 gagal
+G2 (biaya worst):        2 gagal (XAS01 tau=1.0, MIC03 tau=1.0)
+n<30:                    1 (MIC03 tau=2.0)
+G3-G6:                   0 sempat diuji -- tidak ada yang lolos G1/G2 dulu
+
+TOTAL SURVIVOR: 0/12
+```
+
+**Temuan yang harus dicatat jujur:** 4 formula (OPT01 gold VRP, SEA01
+turn-of-month, SEA02 hari-minggu, EVT01 pra-FOMC) menunjukkan pola G1 GAGAL
+dengan tanda pra-registrasi, TAPI kalau tandanya dibalik, G1 akan LOLOS --
+**dan G1 di V10 SUDAH diuji pada return DEMEANED 60-hari sejak awal** (koreksi
+metodologi L11 sudah dibakukan di gerbang, bukan raw). Jadi ini bukan soal
+headwind sekuler yang belum dikoreksi -- deviasinya genuine setelah demean.
+Sesuai aturan eksplisit ("kalau baru berhasil dengan tanda terbalik -> itu
+data mining, BUANG"), keempatnya **tetap dibuang, tidak dibalik**. Temuan ini
+tetap informatif: gold punya asimetri long/short musiman/event yang signifikan
+secara statistik bahkan setelah demean, tapi ARAHNYA konsisten berlawanan dari
+mekanisme yang diprediksi di literatur asal (ekuitas/aset lain). Kemungkinan
+penjelasan: mekanisme akademik (turn-of-month institusional, weekend effect,
+pra-FOMC risk premium) dibangun untuk ekuitas dengan basis investor dan struktur
+kepemilikan berbeda total dari gold; mengimpor TANDA-nya mentah-mentah ke gold
+adalah asumsi yang salah, bukan berarti gold tidak punya struktur musiman sama
+sekali. Arah riset paling konkret berikutnya kalau dilanjutkan: pra-registrasi
+ulang keempat formula ini dengan mekanisme gold-spesifik (bukan transfer
+langsung dari ekuitas) SEBELUM melihat data lagi -- bukan membalik tanda
+berdasarkan hasil yang sudah terlihat (itu tetap data mining).
 
 ## UJI_BUNUH_M5 -- gerbang struktural sebelum bangun apapun
 
@@ -97,7 +159,7 @@ n mengecil (1,092, lebih sedikit observasi mingguan non-tumpang-tindih efektif)
 membuat estimasi long/short kurang stabil. **Perbaikan kappa nyata, tapi tidak
 cukup untuk membalik expectancy jadi positif.**
 
-## Ringkasan menyeluruh v6-v9 (semua yang pernah diuji)
+## Ringkasan menyeluruh v6-v10 (semua yang pernah diuji)
 
 ```
 Harga saja, return MENTAH          : 0/130 lolos G1
@@ -105,35 +167,47 @@ Harga saja, return DEMEANED        : 5/130 lolos G1 (belum diuji G2-G5)
 Makro (D1, demeaned+G1-G5)         : 0/14 lolos (2 lolos G1, gagal G2)
 M5 kill-test (biaya vs sigma)      : 0/15 kombinasi/hold lolos breakeven
 Makro (MINGGUAN, G1-G5 sama persis): 0/4 lolos (kappa turun 2.24x, masih G2/G1 gagal)
+Kelas informasi baru (jurnal, D1)  : 0/12 lolos G1-G6 (9 formula, 1 ditolak
+                                      pra-gerbang krn korelasi, 4 nyaris lolos
+                                      G1 tapi HANYA dgn tanda terbalik -- dibuang)
 
-TOTAL kombinasi/uji diuji sepanjang v6-v9: 163
-TOTAL lolos SEMUA gerbang sampai G5:         0
+TOTAL kombinasi/uji diuji sepanjang v6-v10: 176 (163 + 13 trial V10)
+TOTAL lolos SEMUA gerbang sampai G6:          0
 ```
 
 ## Kesimpulan jujur
 
-Setelah menguji lima kelas pendekatan berbeda -- harga mentah, harga demeaned,
-makro harian (real yield/DXY/breakeven/COT), kelayakan struktural M5 (biaya vs
-volatilitas murni, terlepas dari sinyal), dan makro mingguan (horizon yang
-sesuai frekuensi rilis data itu sendiri) -- **tidak ada satupun yang lolos
-kelima gerbang statistik/ekonomi**. Pola yang konsisten di semua percobaan:
-edge arah yang genuinely simetris (lolos G1) ada tapi secara sistematis lebih
-kecil dari biaya prop-firm-realistis (gagal G2). Memperbaiki horizon (D1->W1)
-memperbaiki rasio biaya/sigma secara terukur dan sesuai prediksi teoretis, tapi
-belum cukup untuk membalik tanda expectancy.
+Setelah menguji enam kelas pendekatan berbeda -- harga mentah, harga demeaned,
+makro harian (real yield/DXY/breakeven/COT legacy), kelayakan struktural M5
+(biaya vs volatilitas murni, terlepas dari sinyal), makro mingguan (horizon
+sesuai frekuensi rilis data), dan kelas informasi BARU dari literatur akademik
+(kointegrasi lintas-aset, variance risk premium, crowding DCOT, proksi order
+flow tick, musiman, event-driven pra-FOMC) -- **tidak ada satupun yang lolos
+gerbang statistik/ekonomi lengkap**. Polanya konsisten dan makin kuat lintas
+kelas: edge yang genuinely simetris (lolos G1) memang ada di beberapa tempat,
+tapi (a) di kelas harga/makro secara sistematis lebih kecil dari biaya
+prop-firm-realistis (gagal G2), dan (b) di kelas musiman/event V10, ADA
+asimetri statistik nyata bahkan setelah demean -- tapi arahnya berlawanan dari
+mekanisme akademik yang diimpor (gagal G1 dengan tanda benar, hanya lolos
+dengan tanda dibalik -- dibuang sesuai aturan anti-data-mining). Memperbaiki
+horizon (D1->W1) memperbaiki rasio biaya/sigma secara terukur dan sesuai
+prediksi teoretis, tapi belum cukup untuk membalik tanda expectancy.
 
-**Ini bukan "belum cukup dicoba".** 163 kombinasi/uji, lima kelas sinyal, tiga
-koreksi metodologi berturut (G1-demeaned, biaya bersyarat, kappa horizon-aware),
-enam horizon (M5 hold 1-24 bar, D1, W1), dan tiga dataset independen (M5
-2021-2026, H1 2003-2026, makro 2003-2026).
+**Ini bukan "belum cukup dicoba".** 176 kombinasi/uji, enam kelas sinyal
+(termasuk 9 formula dari jurnal akademik terverifikasi DOI/SSRN), empat
+koreksi metodologi berturut (G1-demeaned, biaya bersyarat, kappa horizon-aware,
+uji korelasi pra-gerbang), enam horizon (M5 hold 1-24 bar, D1, W1), dan lima
+dataset independen (M5 2021-2026, H1 2003-2026, makro FRED/CFTC 2003-2026,
+DCOT 2006-2026, XAG 2021-2026).
 
-## Rekomendasi (posisi sekarang, setelah UJI_BUNUH_M5 + L15)
+## Rekomendasi (posisi sekarang, setelah UJI_BUNUH_M5 -> L15 -> V10)
 
 | Pilihan | Isi | Status |
 |---|---|---|
-| A. Horizon lebih panjang lagi | Bulanan (20+ hari) -- kappa akan turun lagi ~2x dari W1 | **Belum diuji** -- arah paling konkret berikutnya jika mau dilanjutkan, sesuai pola kappa yang sudah terbukti terprediksi |
-| B. Kelas edge baru | Spread lintas-aset (XAU/XAG), musiman sesi, event-driven (FOMC/NFP) | Belum diuji sama sekali di v6-v9 |
-| C. Terima beta | Long-only vol-target | **TIDAK** -- dilarang aturan prop firm |
+| A. Horizon lebih panjang lagi | Bulanan (20+ hari) -- kappa akan turun lagi ~2x dari W1 | **Belum diuji** -- arah paling konkret untuk kelas MAKRO (MAC05/07) |
+| B. Mekanisme musiman/event gold-spesifik | Pra-registrasi ULANG (bukan balik tanda) untuk OPT01/SEA01/SEA02/EVT01 dengan teori yang dibangun untuk gold, bukan transfer mentah dari ekuitas | **Belum diuji** -- arah paling konkret untuk kelas V10, didukung temuan asimetri statistik nyata (G1 gagal tipis dgn tanda benar) |
+| C. Kelas edge lain yang masih tersisa | Struktur berjangka (perlu data kurva futures berbayar), CPI/NFP (perlu jadwal rilis presisi), skew opsi (perlu option chain) -- semua terhambat DATA, bukan terbukti gagal | Belum bisa diuji dengan sumber gratis |
+| D. Terima beta | Long-only vol-target | **TIDAK** -- dilarang aturan prop firm |
 
 M5 (semua horizon intraday <=24 bar/2 jam) **resmi ditutup** -- VONIS
 UJI_BUNUH_M5 eksplisit melarang lanjut ke sizing/ML/Monte Carlo di granularitas
@@ -144,4 +218,4 @@ yang sangat rendah (cocok untuk gaya prop firm konservatif, tapi perlu recheck
 apakah masih memenuhi target return FTMO dalam periode evaluasi terbatas).
 
 HOLDOUT (15% terakhir tiap dataset) tetap tidak pernah dibuka di sepanjang
-v6, v7, v8, dan v9.
+v6, v7, v8, v9, dan v10.
